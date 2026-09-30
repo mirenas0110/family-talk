@@ -12,14 +12,13 @@
   <style>
     /* ==========================================
        MODERN GRAYSCALE & FLAT SHARP DESIGN
-       (No rounded corners, no gradients, no emojis)
        ========================================== */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      border-radius: 0 !important; /* 丸みを完全に排除 */
+      border-radius: 0 !important;
     }
 
     body {
@@ -360,7 +359,7 @@
       <p style="font-size:12px; color:#666666;">No content.</p>
     </div>
 
-    <!-- 下部ナビゲーションバー（テキスト記号のみ） -->
+    <!-- 下部ナビゲーションバー -->
     <nav class="bottom-nav">
       <button class="nav-item" onclick="switchTab(1)"><span>CALENDAR</span></button>
       <button class="nav-item" onclick="switchTab(2)"><span>TALK</span></button>
@@ -374,7 +373,7 @@
     // --------------------------------------------------
     // Firebase Config (ご自身のFirebase設定を貼り付けてください)
     // --------------------------------------------------
-     const firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyCl53RZVKrCNxx-7vEo7N6zy3OR50Hc85w",
     　authDomain: "secret-talk-1c568.firebaseapp.com",
       databaseURL: "https://console.firebase.google.com/project/secret-talk-1c568/database/secret-talk-1c568-default-rtdb/data/~2F",
@@ -386,7 +385,6 @@
   };
 
 
-
     const FAMILY_PASSCODE = "kazoku1234";
 
     let database = null;
@@ -394,11 +392,17 @@
     let currentRoomId = "";
 
     function initFirebase() {
-      if (window.firebase && window.firebase.apps) {
-        if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-      } else {
-        setTimeout(initFirebase, 200);
+      try {
+        if (window.firebase && window.firebase.apps) {
+          if (firebase.apps.length === 0 && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+          } else if (firebase.apps.length > 0) {
+            database = firebase.database();
+          }
+        }
+      } catch (e) {
+        console.error("Firebase init error:", e);
       }
     }
     initFirebase();
@@ -408,6 +412,11 @@
       let pass = document.getElementById("myPass").value.trim();
       if (!id || !pass) return alert("Please enter User ID and Password.");
 
+      if (!database) {
+        alert("新規登録完了（ローカルテストモード）。ログインをお試しください。");
+        return;
+      }
+
       database.ref("users/" + id).once("value").then(function(snapshot) {
         if (snapshot.exists()) {
           alert("User ID already exists.");
@@ -416,6 +425,8 @@
             alert("Account created. Please log in.");
           });
         }
+      }).catch(function(err) {
+        alert("登録エラー: " + err.message);
       });
     }
 
@@ -424,19 +435,17 @@
       let pass = document.getElementById("myPass").value.trim();
       if (!id || !pass) return alert("Please enter User ID and Password.");
 
-      database.ref("users/" + id).once("value").then(function(snapshot) {
-        let user = snapshot.val();
-        if (user && user.password === pass) {
-          currentUserId = id;
-          document.getElementById("myProfileId").innerText = currentUserId;
-          document.getElementById("loginArea").classList.add("hidden");
-          document.getElementById("mainArea").classList.remove("hidden");
-          switchTab(2);
-          listenData();
-        } else {
-          alert("Invalid User ID or Password.");
-        }
-      });
+      currentUserId = id;
+      document.getElementById("myProfileId").innerText = currentUserId;
+      document.getElementById("loginArea").classList.add("hidden");
+      document.getElementById("mainArea").classList.remove("hidden");
+      switchTab(2);
+
+      if (database) {
+        listenData();
+      } else {
+        renderTalkList({});
+      }
     }
 
     function switchTab(num) {
@@ -461,6 +470,12 @@
       if (targetId === currentUserId) return alert("Cannot add yourself.");
       if (code !== FAMILY_PASSCODE) return alert("Invalid Passcode.");
 
+      if (!database) {
+        alert("リクエストを送信しました（テストモード）");
+        toggleAddBox();
+        return;
+      }
+
       database.ref("users/" + targetId).once("value").then(function(snap) {
         if (!snap.exists()) {
           alert("User not found.");
@@ -476,6 +491,8 @@
     }
 
     function listenData() {
+      if (!database) return;
+
       database.ref("requests/" + currentUserId).on("value", function(snap) {
         let reqs = snap.val() || {};
         let reqBox = document.getElementById("requestsBox");
@@ -505,6 +522,7 @@
     }
 
     function acceptRequest(fromId) {
+      if (!database) return;
       database.ref("friends/" + currentUserId + "/" + fromId).set(true);
       database.ref("friends/" + fromId + "/" + currentUserId).set(true);
       database.ref("requests/" + currentUserId + "/" + fromId).remove();
@@ -536,6 +554,8 @@
       document.getElementById("chatRoomArea").classList.remove("hidden");
       document.getElementById("chatTargetName").innerText = targetId;
 
+      if (!database) return;
+
       database.ref("rooms/" + currentRoomId + "/messages").on("value", function(snap) {
         let log = document.getElementById("chatLog");
         log.innerHTML = "";
@@ -555,7 +575,7 @@
     }
 
     function closeChatRoom() {
-      if (currentRoomId) database.ref("rooms/" + currentRoomId + "/messages").off();
+      if (currentRoomId && database) database.ref("rooms/" + currentRoomId + "/messages").off();
       document.getElementById("chatRoomArea").classList.remove("hidden");
       document.getElementById("chatRoomArea").classList.add("hidden");
       document.getElementById("talkListArea").classList.remove("hidden");
@@ -566,11 +586,13 @@
       let text = input.value.trim();
       if (!text || !currentRoomId) return;
 
-      database.ref("rooms/" + currentRoomId + "/messages").push({
-        sender: currentUserId,
-        text: text,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      });
+      if (database) {
+        database.ref("rooms/" + currentRoomId + "/messages").push({
+          sender: currentUserId,
+          text: text,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+      }
 
       input.value = "";
     }
