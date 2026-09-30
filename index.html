@@ -88,8 +88,8 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 9px;
-      letter-spacing: 0.3px;
+      font-size: 10px;
+      letter-spacing: 0.5px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
@@ -97,7 +97,7 @@
       justify-content: center;
       gap: 3px;
       transition: color 0.15s;
-      padding: 0 1px;
+      text-transform: uppercase;
     }
 
     .nav-btn.active {
@@ -155,6 +155,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 8px;
     }
 
     .friend-info {
@@ -175,24 +176,6 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--text-muted);
-    }
-
-    .online-dot {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 10px;
-      height: 10px;
-      background: var(--dot-online);
-      border: 2px solid var(--surface-color);
-      border-radius: 50%;
-    }
-
-    .unread-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--dot-unread);
-      border-radius: 50%;
     }
 
     .chat-messages {
@@ -229,14 +212,6 @@
     }
     .me .msg-bubble { background: var(--bubble-me); border-color: var(--border-dark); }
     .other .msg-bubble { background: var(--bubble-other); }
-
-    .msg-meta {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 3px;
-      display: flex;
-      gap: 6px;
-    }
 
     .chat-input-area {
       padding: 12px 16px;
@@ -446,7 +421,7 @@
 
     /* ================= MY PAGE MODULE ================= */
     .mypage-container {
-      padding: 30px 20px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -463,28 +438,8 @@
       max-width: 320px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       text-align: left;
-    }
-
-    .setting-group {
-      background: var(--surface-color);
-      padding: 16px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      width: 100%;
-      max-width: 320px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      font-size: 13px;
-      text-align: left;
-    }
-
-    .setting-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
     .menu-list {
@@ -509,7 +464,19 @@
     }
     .menu-item:hover { background: #faf9f6; }
 
-    /* モーダル */
+    /* サブ画面 / モーダル */
+    .sub-screen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--surface-color);
+      display: none;
+      flex-direction: column;
+      z-index: 50;
+    }
+    .sub-screen.active {
+      display: flex;
+    }
+
     .modal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -579,37 +546,44 @@
 
     <!-- 3. MY PAGE MODULE -->
     <div id="tab-mypage" class="content">
-      <div class="header"><h1>MY PAGE</h1></div>
+      <div class="header">
+        <h1>MY PAGE</h1>
+        <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openSettingsModal()">⚙️</button>
+      </div>
       <div class="mypage-container">
+        <!-- プロフィール概要カード（閲覧用） -->
         <div class="profile-card">
-          <div style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">アカウント情報編集</div>
-          
-          <div style="font-size: 11px; color: var(--text-muted);">マイID</div>
-          <input type="text" id="profile-myid" class="chat-input" onchange="saveProfileSettings()">
-
-          <div style="font-size: 11px; color: var(--text-muted);">ニックネーム</div>
-          <input type="text" id="profile-name" class="chat-input" onchange="saveProfileSettings()">
-
-          <div style="font-size: 11px; color: var(--text-muted);">設定用合言葉</div>
-          <input type="text" id="profile-passphrase" class="chat-input" onchange="saveProfileSettings()">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size: 15px; font-weight: 600;" id="display-name">ゲストユーザー</div>
+            <button class="timer-btn btn-start" style="padding: 6px 12px; font-size: 11px; flex:none;" onclick="openAccountEditScreen()">アカウント編集</button>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top:4px;">ID: <span id="display-myid">not set</span></div>
         </div>
 
-        <div class="setting-group">
-          <div style="font-size: 12px; font-weight: 600; margin-bottom: 2px;">プライバシー設定</div>
-          <div class="setting-row">
-            <span>友達追加を許可しない</span>
-            <input type="checkbox" id="setting-block-add" onchange="saveProfileSettings()">
-          </div>
-          <div class="setting-row">
-            <span>オンライン状態を表示する</span>
-            <input type="checkbox" id="setting-show-online" onchange="saveProfileSettings()">
-          </div>
-        </div>
-        
         <div class="menu-list">
           <div class="menu-item" onclick="openGameModal('fortune')"><span>今日の運勢を占う</span><span>›</span></div>
           <div class="menu-item" onclick="openGameModal('brain')"><span>脳トレ・ミニパズル</span><span>›</span></div>
         </div>
+      </div>
+    </div>
+
+    <!-- アカウント編集画面（別画面として表示） -->
+    <div id="sub-screen-account" class="sub-screen">
+      <div class="header">
+        <h1>アカウント編集</h1>
+        <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="closeAccountEditScreen()">✕</button>
+      </div>
+      <div style="padding: 24px; display: flex; flex-direction: column; gap: 14px; overflow-y:auto; flex:1;">
+        <div style="font-size: 12px; color: var(--text-muted);">マイID</div>
+        <input type="text" id="edit-myid" class="search-box" style="margin:0;">
+
+        <div style="font-size: 12px; color: var(--text-muted);">ニックネーム</div>
+        <input type="text" id="edit-name" class="search-box" style="margin:0;">
+
+        <div style="font-size: 12px; color: var(--text-muted);">パスワード / 合言葉 (PW)</div>
+        <input type="password" id="edit-passphrase" class="search-box" style="margin:0;">
+
+        <button class="timer-btn btn-start" style="margin-top: 10px;" onclick="saveAccountSettings()">保存する</button>
       </div>
     </div>
 
@@ -656,13 +630,13 @@
       </div>
     </div>
 
-    <!-- ボトムナビゲーション（左から: カレンダー、トーク、マイページ、掲示板、FOCUS） -->
+    <!-- ボトムナビゲーション（左から: Calendar, Talk, My Page, Board, Focus） -->
     <nav class="nav-bar">
-      <button class="nav-btn" onclick="switchTab('calendar', this)">カレンダー</button>
-      <button class="nav-btn active" onclick="switchTab('talk', this)">トーク</button>
-      <button class="nav-btn" onclick="switchTab('mypage', this)">マイページ</button>
-      <button class="nav-btn" onclick="switchTab('board', this)">掲示板</button>
-      <button class="nav-btn" onclick="switchTab('focus', this)">FOCUS</button>
+      <button class="nav-btn" onclick="switchTab('calendar', this)">Calendar</button>
+      <button class="nav-btn active" onclick="switchTab('talk', this)">Talk</button>
+      <button class="nav-btn" onclick="switchTab('mypage', this)">My Page</button>
+      <button class="nav-btn" onclick="switchTab('board', this)">Board</button>
+      <button class="nav-btn" onclick="switchTab('focus', this)">Focus</button>
     </nav>
   </div>
 
@@ -678,31 +652,17 @@
   <script>
     let currentTalkSubTab = 'all';
     
-    let messages = JSON.parse(localStorage.getItem('family_messages')) || [
-      { id: 1, sender: 'ママ', text: '今日の夕方、買い物お願いできる？', time: '12:10', read: false },
-      { id: 2, sender: '自分', text: '了解！何買う？', time: '12:15', read: true }
-    ];
-
-    let friends = JSON.parse(localStorage.getItem('family_friends')) || [
-      { id: 'mom01', name: 'ママ', online: true, unread: true },
-      { id: 'taro02', name: 'たろう', online: false, unread: false }
-    ];
-
-    let pendingRequests = JSON.parse(localStorage.getItem('family_pending')) || [
-      { id: 'hanako', name: 'はなこ', passphrase: 'secret' }
-    ];
+    let messages = JSON.parse(localStorage.getItem('family_messages')) || [];
+    let friends = JSON.parse(localStorage.getItem('family_friends')) || [];
+    let pendingRequests = JSON.parse(localStorage.getItem('family_pending')) || [];
 
     let mySettings = JSON.parse(localStorage.getItem('family_my_settings')) || {
-      name: 'パパ',
-      myId: 'papa999',
-      passphrase: 'family2026',
-      blockAdd: false,
-      showOnline: true
+      name: 'ゲストユーザー',
+      myId: 'user_' + Math.floor(Math.random() * 1000),
+      passphrase: 'password123'
     };
 
-    let events = JSON.parse(localStorage.getItem('family_events')) || [
-      { date: '2026-10-15', title: '家族会議', visibility: 'group' }
-    ];
+    let events = JSON.parse(localStorage.getItem('family_events')) || [];
 
     // FOCUS 関連の状態変数
     let focusMode = 'timer';
@@ -712,20 +672,37 @@
     let timerLeftSeconds = 25 * 60;
     let stopwatchSeconds = 0;
 
-    // マイページフォームへの反映
-    document.getElementById('profile-myid').value = mySettings.myId;
-    document.getElementById('profile-name').value = mySettings.name;
-    document.getElementById('profile-passphrase').value = mySettings.passphrase;
-    document.getElementById('setting-block-add').checked = mySettings.blockAdd;
-    document.getElementById('setting-show-online').checked = mySettings.showOnline;
+    // 初期マイページ表示の反映
+    updateMyPageUI();
 
-    function saveProfileSettings() {
-      mySettings.myId = document.getElementById('profile-myid').value;
-      mySettings.name = document.getElementById('profile-name').value;
-      mySettings.passphrase = document.getElementById('profile-passphrase').value;
-      mySettings.blockAdd = document.getElementById('setting-block-add').checked;
-      mySettings.showOnline = document.getElementById('setting-show-online').checked;
+    function updateMyPageUI() {
+      document.getElementById('display-name').innerText = mySettings.name;
+      document.getElementById('display-myid').innerText = mySettings.myId;
+    }
+
+    function openAccountEditScreen() {
+      document.getElementById('edit-myid').value = mySettings.myId;
+      document.getElementById('edit-name').value = mySettings.name;
+      document.getElementById('edit-passphrase').value = mySettings.passphrase;
+      document.getElementById('sub-screen-account').classList.add('active');
+    }
+
+    function closeAccountEditScreen() {
+      document.getElementById('sub-screen-account').classList.remove('active');
+    }
+
+    function saveAccountSettings() {
+      mySettings.myId = document.getElementById('edit-myid').value;
+      mySettings.name = document.getElementById('edit-name').value;
+      mySettings.passphrase = document.getElementById('edit-passphrase').value;
       localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
+      updateMyPageUI();
+      closeAccountEditScreen();
+      alert('アカウント情報を更新しました！');
+    }
+
+    function openSettingsModal() {
+      alert('設定画面：環境設定を行います。');
     }
 
     function switchTab(tabId, btnElement) {
@@ -753,7 +730,7 @@
           <div style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
             <div style="font-size:14px; font-weight:600;">友達をID検索して追加</div>
             <input type="text" id="search-id-input" class="search-box" placeholder="相手のIDを入力...">
-            <input type="text" id="search-pass-input" class="search-box" placeholder="合言葉を入力...">
+            <input type="text" id="search-pass-input" class="search-box" placeholder="合言葉 (PW) を入力...">
             <button class="timer-btn btn-start" onclick="sendFriendRequest()">承認リクエストを送る</button>
           </div>
         `;
@@ -774,7 +751,12 @@
         msgContainer.innerHTML = '';
 
         if (friends.length === 0) {
-          msgContainer.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">友達はまだいません</div>';
+          msgContainer.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; margin-top:40px; text-align:center;">
+              <div style="color:var(--text-muted); font-size:13px;">まだ友達がいません</div>
+              <button class="timer-btn btn-start" style="width:auto; padding:8px 16px; font-size:12px;" onclick="document.querySelectorAll('.talk-tab')[4].click()">＋ 友達を追加</button>
+            </div>
+          `;
           return;
         }
 
@@ -783,13 +765,9 @@
           item.className = 'friend-item';
           item.innerHTML = `
             <div class="friend-info">
-              <div class="avatar-wrapper">
-                ${f.name.charAt(0)}
-                ${f.online && mySettings.showOnline ? '<div class="online-dot"></div>' : ''}
-              </div>
+              <div class="avatar-wrapper">${f.name.charAt(0)}</div>
               <span style="font-size:14px; font-weight:500;">${f.name}</span>
             </div>
-            ${f.unread ? '<div class="unread-dot"></div>' : ''}
           `;
           msgContainer.appendChild(item);
         });
@@ -827,6 +805,11 @@
       if (!container) return;
       container.innerHTML = '';
       
+      if (messages.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">メッセージはまだありません</div>';
+        return;
+      }
+
       messages.forEach(m => {
         if (filterText && !m.text.includes(filterText)) return;
         const isMe = m.sender === mySettings.name;
@@ -836,10 +819,7 @@
         wrapper.innerHTML = `
           <div class="msg-sender">${m.sender}</div>
           <div class="msg-bubble">${m.text}</div>
-          <div class="msg-meta">
-            <span>${m.time}</span>
-            ${isMe ? `<span>${m.read ? '既読' : ''}</span>` : ''}
-          </div>
+          <div class="msg-meta" style="font-size:10px; color:var(--text-muted); margin-top:3px;">${m.time}</div>
         `;
         container.appendChild(wrapper);
       });
@@ -858,8 +838,7 @@
         id: Date.now(),
         sender: mySettings.name,
         text: text,
-        time: timeStr,
-        read: true
+        time: timeStr
       });
       localStorage.setItem('family_messages', JSON.stringify(messages));
       input.value = '';
@@ -891,7 +870,7 @@
 
     function approveFriend(index) {
       const approved = pendingRequests.splice(index, 1)[0];
-      friends.push({ id: approved.id, name: approved.name, online: true, unread: false });
+      friends.push({ id: approved.id, name: approved.name });
       localStorage.setItem('family_pending', JSON.stringify(pendingRequests));
       localStorage.setItem('family_friends', JSON.stringify(friends));
       renderTalkContent();
@@ -1008,7 +987,7 @@
     function openEventModal() {
       const title = prompt('予定のタイトルを入力:');
       if (!title) return;
-      events.push({ date: '2026-10-15', title: title, visibility: 'group' });
+      events.push({ date: '2026-10-15', title: title });
       localStorage.setItem('family_events', JSON.stringify(events));
       renderCalendar();
     }
