@@ -221,12 +221,13 @@
             position: relative;
         }
 
+        /* タブの切り替え制御 */
         .tab-content {
-            flex: 1;
             display: none;
             flex-direction: column;
-            background-color: var(--bg-color);
+            flex: 1;
             overflow-y: auto;
+            background-color: var(--bg-color);
             height: 100%;
         }
 
@@ -263,7 +264,7 @@
 
         .nav-item.active {
             color: var(--accent-color);
-            font-size: 13px; /* 開いているタブは大きくする */
+            font-size: 13px;
             font-weight: 700;
         }
 
@@ -278,7 +279,7 @@
             height: 24px;
         }
 
-        /* 共通タブペイン */
+        /* 共通タブペインの中身用パディング */
         .tab-pane {
             padding: 20px;
             display: flex;
@@ -679,8 +680,8 @@
         <div id="main-app" class="hidden">
             <div class="content-area">
                 
-                <!-- カレンダータブ (月間カレンダー) -->
-                <div id="tab-calendar" class="tab-pane tab-content">
+                <!-- カレンダータブ -->
+                <div id="tab-calendar" class="tab-content tab-pane">
                     <h2 class="pane-title">Calendar</h2>
                     <div class="calendar-wrapper">
                         <div class="calendar-header-nav">
@@ -712,7 +713,7 @@
                 </div>
 
                 <!-- トークタブ -->
-                <div id="tab-talk" class="tab-pane tab-content active">
+                <div id="tab-talk" class="tab-content tab-pane active">
                     <div class="talk-container">
                         <div class="talk-top-bar">
                             <div class="talk-search-row">
@@ -725,9 +726,7 @@
                                 <div class="talk-header-tab" onclick="switchTalkHeader('groups')">グループ</div>
                             </div>
                         </div>
-                        <div class="talk-list-area" id="talk-list-container">
-                            <!-- 動的挿入 -->
-                        </div>
+                        <div class="talk-list-area" id="talk-list-container"></div>
                     </div>
                     <!-- 個別チャットルームビュー (オーバーレイ) -->
                     <div id="chat-room-view" class="chat-room-view hidden">
@@ -744,7 +743,7 @@
                 </div>
 
                 <!-- メインタブ (ダッシュボード) -->
-                <div id="tab-main" class="tab-pane tab-content">
+                <div id="tab-main" class="tab-content tab-pane">
                     <h2 class="pane-title">Main</h2>
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
@@ -777,7 +776,7 @@
                 </div>
 
                 <!-- 掲示板タブ -->
-                <div id="tab-bulletin" class="tab-pane tab-content">
+                <div id="tab-bulletin" class="tab-content tab-pane">
                     <h2 class="pane-title">Bulletin</h2>
                     <div class="post-card">
                         <div class="input-group">
@@ -790,7 +789,7 @@
                 </div>
 
                 <!-- FOCUSタブ -->
-                <div id="tab-focus" class="tab-pane tab-content">
+                <div id="tab-focus" class="tab-content tab-pane">
                     <h2 class="pane-title">FOCUS</h2>
                     <div class="focus-timer-box">
                         <div class="timer-display" id="focus-timer-display">25:00</div>
@@ -1000,13 +999,16 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            document.getElementById(`nav-${tabName}`).classList.add('active');
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            const targetNav = document.getElementById(`nav-${tabName}`);
+
+            if (targetTab) targetTab.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
         }
 
         // --- 月間カレンダー機能 ---
         let calendarYear = new Date().getFullYear();
-        let calendarMonth = new Date().getMonth(); // 0-11
+        let calendarMonth = new Date().getMonth();
         let selectedDateStr = null;
 
         function changeMonth(direction) {
@@ -1022,7 +1024,9 @@
         }
 
         function renderCalendar() {
-            document.getElementById('calendar-month-label').innerText = `${calendarYear}年 ${calendarMonth + 1}月`;
+            const monthLabel = document.getElementById('calendar-month-label');
+            if (!monthLabel) return;
+            monthLabel.innerText = `${calendarYear}年 ${calendarMonth + 1}月`;
             const grid = document.getElementById('calendar-grid-days');
             grid.innerHTML = '';
 
@@ -1032,20 +1036,17 @@
 
             const myEvents = db.calendar.filter(e => e.user === db.currentUser.id);
 
-            // 前月の日付
             for (let i = firstDayIndex; i > 0; i--) {
                 const dayNum = prevLastDay - i + 1;
                 const cell = createDayCell(calendarMonth === 0 ? calendarYear - 1 : calendarYear, calendarMonth === 0 ? 11 : calendarMonth - 1, dayNum, true);
                 grid.appendChild(cell);
             }
 
-            // 当月の日付
             for (let i = 1; i <= lastDay; i++) {
                 const cell = createDayCell(calendarYear, calendarMonth, i, false, myEvents);
                 grid.appendChild(cell);
             }
 
-            // 次月の日付で埋める (42マス構成)
             const totalCells = grid.children.length;
             const remaining = totalCells <= 35 ? 35 - totalCells : 42 - totalCells;
             for (let i = 1; i <= remaining; i++) {
@@ -1136,9 +1137,11 @@
 
         function renderTalkList() {
             const container = document.getElementById('talk-list-container');
+            if (!container) return;
             container.innerHTML = '';
             const myId = db.currentUser.id;
-            const query = document.getElementById('talk-search-input').value.toLowerCase();
+            const searchInput = document.getElementById('talk-search-input');
+            const query = searchInput ? searchInput.value.toLowerCase() : '';
 
             if (currentTalkTab === 'requests') {
                 const reqs = db.friendRequests.filter(r => r.to === myId && r.status === 'pending');
@@ -1316,6 +1319,7 @@
 
         function renderChatMessages() {
             const container = document.getElementById('chat-messages-container');
+            if (!container) return;
             container.innerHTML = '';
             const myId = db.currentUser.id;
 
@@ -1376,8 +1380,10 @@
             const friendCount = db.friends.filter(f => f.user1 === myId || f.user2 === myId).length;
             const taskCount = db.tasks.filter(t => t.user === myId && t.completed).length;
 
-            document.getElementById('dash-friends-count').innerText = friendCount;
-            document.getElementById('dash-tasks-count').innerText = taskCount;
+            const fCountEl = document.getElementById('dash-friends-count');
+            const tCountEl = document.getElementById('dash-tasks-count');
+            if (fCountEl) fCountEl.innerText = friendCount;
+            if (tCountEl) tCountEl.innerText = taskCount;
         }
 
         function updateProfile() {
@@ -1422,6 +1428,7 @@
 
         function renderBulletin() {
             const container = document.getElementById('bulletin-posts-container');
+            if (!container) return;
             container.innerHTML = '';
             if (db.bulletin.length === 0) {
                 container.innerHTML = `<div style="font-size: 13px; color: var(--text-secondary); text-align: center;">投稿はまだありません</div>`;
@@ -1447,10 +1454,11 @@
         let isTimerRunning = false;
 
         function updateTimerDisplay() {
+            const displayEl = document.getElementById('focus-timer-display');
+            if (!displayEl) return;
             const min = Math.floor(timerSeconds / 60);
             const sec = timerSeconds % 60;
-            document.getElementById('focus-timer-display').innerText = 
-                `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+            displayEl.innerText = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         }
 
         function toggleTimer() {
@@ -1458,10 +1466,10 @@
             if (isTimerRunning) {
                 clearInterval(timerInterval);
                 isTimerRunning = false;
-                btn.innerText = 'スタート';
+                if (btn) btn.innerText = 'スタート';
             } else {
                 isTimerRunning = true;
-                btn.innerText = '一時停止';
+                if (btn) btn.innerText = '一時停止';
                 timerInterval = setInterval(() => {
                     if (timerSeconds > 0) {
                         timerSeconds--;
@@ -1469,7 +1477,7 @@
                     } else {
                         clearInterval(timerInterval);
                         isTimerRunning = false;
-                        btn.innerText = 'スタート';
+                        if (btn) btn.innerText = 'スタート';
                         alert('お疲れ様でした！集中セッション終了です。');
                     }
                 }, 1000);
@@ -1481,7 +1489,8 @@
             isTimerRunning = false;
             timerSeconds = 25 * 60;
             updateTimerDisplay();
-            document.getElementById('timer-start-btn').innerText = 'スタート';
+            const btn = document.getElementById('timer-start-btn');
+            if (btn) btn.innerText = 'スタート';
         }
 
         function addFocusTask() {
@@ -1513,6 +1522,7 @@
 
         function renderFocusTasks() {
             const list = document.getElementById('focus-task-list');
+            if (!list) return;
             list.innerHTML = '';
             const myTasks = db.tasks.filter(t => t.user === db.currentUser.id);
             if (myTasks.length === 0) {
