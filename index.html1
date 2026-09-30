@@ -1,1 +1,547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>家族ノート</title>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
+  <style>
+    /* ==========================================
+       AIっぽさを排除した落ち着いたシンプルデザイン
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    }
+
+    body {
+      background-color: #f7f6f2; /* 温かみのある生成り色 */
+      color: #333333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* メイン枠（カード感を抑えたナチュラルな枠組み） */
+    .app-container, .login-box {
+      background: #ffffff;
+      width: 100%;
+      max-width: 700px;
+      height: 90vh;
+      border: 1px solid #e2ded8;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-box {
+      height: auto;
+      padding: 35px 25px;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .login-box h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #4a5568;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      background: #fafafa;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      background: #5a738e; /* 落ち着いたネイビーグレー */
+      color: white;
+      font-weight: bold;
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    /* タブ切り替えエリア */
+    .tab-content {
+      display: none;
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      padding-bottom: 70px;
+    }
+
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 下部ナビゲーションバー */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #ffffff;
+      border-top: 1px solid #e2ded8;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .nav-item {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      color: #8c8c8c;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .nav-item .icon {
+      font-size: 18px;
+      margin-bottom: 3px;
+    }
+
+    .nav-item.active {
+      color: #2d3748;
+      font-weight: bold;
+    }
+
+    /* フレンド申請＆追加モーダル・ボックス */
+    .add-friend-box, .requests-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .add-friend-box h4, .requests-box h4 {
+      font-size: 14px;
+      color: #4a5568;
+      margin-bottom: 10px;
+    }
+
+    .request-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+
+    /* トーク一覧 */
+    .talk-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .talk-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid #edf2f7;
+      cursor: pointer;
+    }
+
+    .talk-item:hover {
+      background: #f7fafc;
+    }
+
+    /* チャット画面 */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    #chatLog {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+    }
+
+    .my-msg { align-self: flex-end; align-items: flex-end; }
+    .other-msg { align-self: flex-start; align-items: flex-start; }
+
+    .msg-bubble {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .my-msg .msg-bubble {
+      background-color: #d1e3f0; /* ナチュラルな薄いブルー */
+      color: #2d3748;
+    }
+
+    .other-msg .msg-bubble {
+      background-color: #edf2f7;
+      color: #2d3748;
+    }
+
+    .msg-time { font-size: 10px; color: #a0aec0; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- ログイン・初期画面 -->
+  <div id="loginArea" class="login-box">
+    <h2>家族ノート</h2>
+    <input type="text" id="myId" placeholder="自分の名前・ID">
+    <input type="password" id="myPass" placeholder="パスワード">
+    <button onclick="login()" style="width:100%; margin-bottom:8px;">ログイン</button>
+    <button onclick="registerUser()" class="secondary" style="width:100%;">新規アカウント作成</button>
+  </div>
+
+  <!-- アプリメイン画面 -->
+  <div id="mainArea" class="app-container hidden">
+
+    <!-- タブ1: カレンダー -->
+    <div id="tab1" class="tab-content">
+      <h3 style="margin-bottom:15px; font-size:16px;">📅 予定表</h3>
+      <p style="font-size:13px; color:#666;">家族の予定共有エリアです。</p>
+    </div>
+
+    <!-- タブ2: メッセージ -->
+    <div id="tab2" class="tab-content">
+      <!-- A. トーク一覧 -->
+      <div id="talkListArea">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="font-size:16px;">💬 連絡</h3>
+          <button onclick="toggleAddBox()" style="font-size:12px; padding:4px 10px;">＋ メンバー追加</button>
+        </div>
+
+        <!-- メンバー追加フォーム (初期非表示) -->
+        <div id="addFriendBox" class="add-friend-box hidden">
+          <h4>新しいメンバーを追加</h4>
+          <input type="text" id="targetUserId" placeholder="追加したい相手のID">
+          <input type="password" id="passcode" placeholder="家族の合言葉">
+          <button onclick="sendFriendRequest()" style="width:100%;">追加申請を送る</button>
+        </div>
+
+        <!-- 届いている申請一覧 -->
+        <div id="requestsBox" class="requests-box hidden">
+          <h4>届いている追加申請</h4>
+          <div id="requestsList"></div>
+        </div>
+
+        <div id="talkList" class="talk-list"></div>
+      </div>
+
+      <!-- B. 個別トーク画面 -->
+      <div id="chatRoomArea" class="hidden">
+        <div class="chat-header">
+          <button onclick="closeChatRoom()" class="secondary" style="padding:4px 8px; font-size:12px;">＜ 戻る</button>
+          <span id="chatTargetName" style="font-weight:bold; margin-left:10px;">-</span>
+        </div>
+
+        <div id="chatLog"></div>
+
+        <div style="display:flex; gap:6px; padding-top:10px;">
+          <input type="text" id="chatInput" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter') sendChat()">
+          <button onclick="sendChat()" style="width:70px;">送信</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- タブ3: 設定（マイページ） -->
+    <div id="tab3" class="tab-content">
+      <h3 style="margin-bottom:15px; font-size:16px;">⚙️ 設定</h3>
+      <p style="font-size:14px; margin-bottom:10px;">ログイン中: <strong id="myProfileId">-</strong></p>
+      <button onclick="logout()" style="background:#e53e3e; width:100%; margin-top:20px;">ログアウト</button>
+    </div>
+
+    <!-- タブ4: 掲示板（ブログ） -->
+    <div id="tab4" class="tab-content">
+      <h3 style="margin-bottom:15px; font-size:16px;">📝 掲示板</h3>
+      <p style="font-size:13px; color:#666;">家族への連絡事項メモエリアです。</p>
+    </div>
+
+    <!-- タブ5: おまけ（ゲーム） -->
+    <div id="tab5" class="tab-content">
+      <h3 style="margin-bottom:15px; font-size:16px;">🎮 おまけ</h3>
+      <p style="font-size:13px; color:#666;">ミニゲーム・メモエリアです。</p>
+    </div>
+
+    <!-- 下部ナビゲーション -->
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="switchTab(1)"><span class="icon">📅</span><span>予定</span></button>
+      <button class="nav-item" onclick="switchTab(2)"><span class="icon">💬</span><span>連絡</span></button>
+      <button class="nav-item" onclick="switchTab(3)"><span class="icon">⚙️</span><span>設定</span></button>
+      <button class="nav-item" onclick="switchTab(4)"><span class="icon">📝</span><span>掲示板</span></button>
+      <button class="nav-item" onclick="switchTab(5)"><span class="icon">🎮</span><span>おまけ</span></button>
+    </nav>
+  </div>
+
+  <script>
+    // --------------------------------------------------
+    // Firebase設定（ご自身のコンソールの内容に書き換えてください）
+    // --------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyCl53RZVKrCNxx-7vEo7N6zy3OR50Hc85w",
+    　authDomain: "secret-talk-1c568.firebaseapp.com",
+      databaseURL: "https://console.firebase.google.com/project/secret-talk-1c568/database/secret-talk-1c568-default-rtdb/data/~2F",
+    　projectId: "secret-talk-1c568",
+   　 storageBucket: "secret-talk-1c568.firebasestorage.app",
+    　messagingSenderId: "599554170291",
+    　appId: "1:599554170291:web:fc6ddf50a013edef99bfc6",
+    　measurementId: "G-9MBC3JM2GD"
+  };
+
+
+
+    // 家族の共通合言葉（お好きな合言葉に変更してください）
+    const FAMILY_PASSCODE = "kazoku1234";
+
+    let database = null;
+    let currentUserId = "";
+    let currentRoomId = "";
+
+    function initFirebase() {
+      if (window.firebase && window.firebase.apps) {
+        if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+      } else {
+        setTimeout(initFirebase, 200);
+      }
+    }
+    initFirebase();
+
+    // ユーザー登録
+    function registerUser() {
+      let id = document.getElementById("myId").value.trim();
+      let pass = document.getElementById("myPass").value.trim();
+      if (!id || !pass) return alert("名前とパスワードを入力してください");
+
+      database.ref("users/" + id).once("value").then(function(snapshot) {
+        if (snapshot.exists()) {
+          alert("この名前は既に使用されています");
+        } else {
+          database.ref("users/" + id).set({ password: pass }).then(function() {
+            alert("アカウントを作成しました！ログインしてください");
+          });
+        }
+      });
+    }
+
+    // ログイン
+    function login() {
+      let id = document.getElementById("myId").value.trim();
+      let pass = document.getElementById("myPass").value.trim();
+      if (!id || !pass) return alert("名前とパスワードを入力してください");
+
+      database.ref("users/" + id).once("value").then(function(snapshot) {
+        let user = snapshot.val();
+        if (user && user.password === pass) {
+          currentUserId = id;
+          document.getElementById("myProfileId").innerText = currentUserId;
+          document.getElementById("loginArea").classList.add("hidden");
+          document.getElementById("mainArea").classList.remove("hidden");
+          switchTab(2);
+          listenData();
+        } else {
+          alert("名前またはパスワードが間違っています");
+        }
+      });
+    }
+
+    // タブ切り替え
+    function switchTab(num) {
+      let contents = document.querySelectorAll(".tab-content");
+      let items = document.querySelectorAll(".nav-item");
+      contents.forEach(el => el.classList.remove("active"));
+      items.forEach(el => el.classList.remove("active"));
+      document.getElementById("tab" + num).classList.add("active");
+      items[num - 1].classList.add("active");
+      if (num === 2) closeChatRoom();
+    }
+
+    // フレンド申請送信
+    function toggleAddBox() {
+      document.getElementById("addFriendBox").classList.toggle("hidden");
+    }
+
+    function sendFriendRequest() {
+      let targetId = document.getElementById("targetUserId").value.trim();
+      let code = document.getElementById("passcode").value.trim();
+
+      if (!targetId) return alert("相手の名前を入力してください");
+      if (targetId === currentUserId) return alert("自分を追加することはできません");
+      if (code !== FAMILY_PASSCODE) return alert("合言葉が違います");
+
+      database.ref("users/" + targetId).once("value").then(function(snap) {
+        if (!snap.exists()) {
+          alert("その名前のユーザーは見つかりません");
+        } else {
+          // 相手へ申請を送る
+          database.ref("requests/" + targetId + "/" + currentUserId).set(true).then(function() {
+            alert("追加申請を送りました！相手が承認するとトークを開始できます");
+            document.getElementById("targetUserId").value = "";
+            document.getElementById("passcode").value = "";
+            toggleAddBox();
+          });
+        }
+      });
+    }
+
+    // リアルタイムデータ監視
+    function listenData() {
+      // 申請の監視
+      database.ref("requests/" + currentUserId).on("value", function(snap) {
+        let reqs = snap.val() || {};
+        let reqBox = document.getElementById("requestsBox");
+        let reqList = document.getElementById("requestsList");
+        reqList.innerHTML = "";
+
+        let keys = Object.keys(reqs);
+        if (keys.length > 0) {
+          reqBox.classList.remove("hidden");
+          keys.forEach(fromId => {
+            reqList.innerHTML += `
+              <div class="request-item">
+                <span>${fromId} さんからの申請</span>
+                <button onclick="acceptRequest('${fromId}')" style="font-size:11px; padding:4px 8px;">承認</button>
+              </div>
+            `;
+          });
+        } else {
+          reqBox.classList.add("hidden");
+        }
+      });
+
+      // 承認済みフレンド一覧＆トーク監視
+      database.ref("friends/" + currentUserId).on("value", function(snap) {
+        let friends = snap.val() || {};
+        renderTalkList(friends);
+      });
+    }
+
+    // 申請を承認
+    function acceptRequest(fromId) {
+      // お互いをフレンドに追加
+      database.ref("friends/" + currentUserId + "/" + fromId).set(true);
+      database.ref("friends/" + fromId + "/" + currentUserId).set(true);
+      // 申請データを削除
+      database.ref("requests/" + currentUserId + "/" + fromId).remove();
+    }
+
+    // トーク一覧の描画
+    function renderTalkList(friends) {
+      let list = document.getElementById("talkList");
+      list.innerHTML = "";
+
+      let friendIds = Object.keys(friends);
+      if (friendIds.length === 0) {
+        list.innerHTML = `<p style="font-size:12px; color:#888; text-align:center; margin-top:20px;">まだメンバーがいません。<br>右上の「＋ メンバー追加」から追加してください。</p>`;
+        return;
+      }
+
+      friendIds.forEach(fId => {
+        list.innerHTML += `
+          <div class="talk-item" onclick="openChatRoom('${fId}')">
+            <span style="font-weight:bold;">${fId}</span>
+            <span style="font-size:12px; color:#a0aec0;">💬 開く</span>
+          </div>
+        `;
+      });
+    }
+
+    // チャット画面
+    function openChatRoom(targetId) {
+      currentRoomId = [currentUserId, targetId].sort().join("_");
+      document.getElementById("talkListArea").classList.add("hidden");
+      document.getElementById("chatRoomArea").classList.remove("hidden");
+      document.getElementById("chatTargetName").innerText = targetId;
+
+      database.ref("rooms/" + currentRoomId + "/messages").on("value", function(snap) {
+        let log = document.getElementById("chatLog");
+        log.innerHTML = "";
+        let msgs = snap.val() || {};
+
+        for (let k in msgs) {
+          let m = msgs[k];
+          let isMe = m.sender === currentUserId;
+          log.innerHTML += `
+            <div class="msg-row ${isMe ? 'my-msg' : 'other-msg'}">
+              <div class="msg-bubble">${m.text}</div>
+            </div>
+          `;
+        }
+        log.scrollTop = log.scrollHeight;
+      });
+    }
+
+    function closeChatRoom() {
+      if (currentRoomId) database.ref("rooms/" + currentRoomId + "/messages").off();
+      document.getElementById("chatRoomArea").classList.remove("hidden");
+      document.getElementById("chatRoomArea").classList.add("hidden");
+      document.getElementById("talkListArea").classList.remove("hidden");
+    }
+
+    function sendChat() {
+      let input = document.getElementById("chatInput");
+      let text = input.value.trim();
+      if (!text || !currentRoomId) return;
+
+      database.ref("rooms/" + currentRoomId + "/messages").push({
+        sender: currentUserId,
+        text: text,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      input.value = "";
+    }
+
+    function logout() {
+      location.reload();
+    }
+  </script>
+</body>
+</html>
