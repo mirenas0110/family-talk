@@ -88,8 +88,8 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 10px;
-      letter-spacing: 0.5px;
+      font-size: 9px;
+      letter-spacing: 0.3px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
@@ -97,7 +97,7 @@
       justify-content: center;
       gap: 3px;
       transition: color 0.15s;
-      padding: 0 2px;
+      padding: 0 1px;
     }
 
     .nav-btn.active {
@@ -147,16 +147,6 @@
       border-color: var(--accent);
     }
 
-    /* 友達リスト（縦並び） */
-    .friend-list-container {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-      overflow-y: auto;
-    }
-
     .friend-item {
       background: var(--surface-color);
       padding: 12px 16px;
@@ -173,7 +163,6 @@
       gap: 12px;
     }
 
-    /* アイコン ＆ オンライン/未読ポチ */
     .avatar-wrapper {
       position: relative;
       width: 36px;
@@ -349,21 +338,73 @@
       overflow-y: auto;
     }
 
-    /* ================= STUDY LOG MODULE ================= */
-    .study-container {
-      padding: 32px 20px;
+    /* ================= FOCUS MODULE ================= */
+    .focus-container {
+      padding: 24px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
+      gap: 20px;
       text-align: center;
+    }
+
+    .focus-mode-switcher {
+      display: flex;
+      gap: 8px;
+      background: var(--surface-color);
+      padding: 4px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    .mode-btn {
+      padding: 6px 14px;
+      font-size: 12px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #fff;
     }
 
     .timer-display {
       font-size: 52px;
       font-weight: 300;
       letter-spacing: 2px;
-      margin: 10px 0;
+      margin: 5px 0;
+    }
+
+    .timer-settings-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 280px;
+      background: var(--surface-color);
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .preset-buttons {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .preset-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      background: var(--bg-color);
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     .timer-controls {
@@ -409,7 +450,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       text-align: center;
     }
 
@@ -422,13 +463,8 @@
       max-width: 320px;
       display: flex;
       flex-direction: column;
-      align-items: center;
       gap: 10px;
-    }
-
-    .profile-card input {
-      text-align: center;
-      font-size: 14px;
+      text-align: left;
     }
 
     .setting-group {
@@ -503,30 +539,7 @@
 
   <div class="app-container">
 
-    <!-- TALK MODULE -->
-    <div id="tab-talk" class="content active">
-      <div class="talk-header">
-        <input type="text" id="global-search" class="search-box" placeholder="メッセージや友達を検索..." oninput="filterTalkContent()">
-        <div class="talk-tabs">
-          <button class="talk-tab active" onclick="switchTalkSubTab('all', this)">全体</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('unapproved', this)">未承認</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('friends', this)">友達</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('groups', this)">グループ</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('add', this)">＋ 友達追加</button>
-        </div>
-      </div>
-      
-      <!-- メインのチャット・リスト表示領域 -->
-      <div id="talk-body-area" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input-area" id="chat-input-area">
-          <input type="text" id="chat-input" class="chat-input" placeholder="メッセージを入力..." onkeypress="handleKey(event)">
-          <button class="chat-send-btn" onclick="sendMessage()">送信</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- CALENDAR MODULE -->
+    <!-- 1. CALENDAR MODULE -->
     <div id="tab-calendar" class="content">
       <div class="cal-header">
         <div class="cal-title" id="cal-month-title" style="font-weight:600; font-size:14px;">2026年 10月</div>
@@ -542,50 +555,54 @@
       </div>
     </div>
 
-    <!-- STUDY LOG MODULE -->
-    <div id="tab-study" class="content">
-      <div class="header"><h1>STUDY LOG</h1></div>
-      <div class="study-container">
-        <div style="font-size: 14px; color: var(--text-muted);">集中タイマー</div>
-        <div class="timer-display" id="timer-display">25:00</div>
-        <div class="timer-controls">
-          <button class="timer-btn btn-start" id="timer-toggle-btn" onclick="toggleTimer()">スタート</button>
-          <button class="timer-btn btn-reset" onclick="resetTimer()">リセット</button>
+    <!-- 2. TALK MODULE -->
+    <div id="tab-talk" class="content active">
+      <div class="talk-header">
+        <input type="text" id="global-search" class="search-box" placeholder="メッセージや友達を検索..." oninput="filterTalkContent()">
+        <div class="talk-tabs">
+          <button class="talk-tab active" onclick="switchTalkSubTab('all', this)">全体</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('unapproved', this)">未承認</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('friends', this)">友達</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('groups', this)">グループ</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('add', this)">＋ 友達追加</button>
+        </div>
+      </div>
+      
+      <div id="talk-body-area" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area" id="chat-input-area">
+          <input type="text" id="chat-input" class="chat-input" placeholder="メッセージを入力..." onkeypress="handleKey(event)">
+          <button class="chat-send-btn" onclick="sendMessage()">送信</button>
         </div>
       </div>
     </div>
 
-    <!-- BOARD MODULE -->
-    <div id="tab-board" class="content">
-      <div class="header"><h1>BOARD</h1></div>
-      <div class="board-container">
-        <div class="board-card">
-          <div style="font-weight:600; margin-bottom:4px;">📌 家族のルールメモ</div>
-          <div style="color:var(--text-muted); font-size:13px;">ゴミ出しの曜日や大切なお知らせをいつでも残せます。</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MY PAGE MODULE -->
+    <!-- 3. MY PAGE MODULE -->
     <div id="tab-mypage" class="content">
       <div class="header"><h1>MY PAGE</h1></div>
       <div class="mypage-container">
         <div class="profile-card">
-          <div style="font-size: 11px; color: var(--text-muted);">マイID: <span id="my-id-display">fam123</span></div>
-          <div style="font-size: 12px; color: var(--text-muted);">ニックネーム</div>
-          <input type="text" id="profile-name" value="パパ" class="chat-input" onchange="saveProfileSettings()">
-          <div style="font-size: 12px; color: var(--text-muted);">設定用合言葉</div>
-          <input type="text" id="profile-passphrase" value="family2026" class="chat-input" onchange="saveProfileSettings()">
+          <div style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">アカウント情報編集</div>
+          
+          <div style="font-size: 11px; color: var(--text-muted);">マイID</div>
+          <input type="text" id="profile-myid" class="chat-input" onchange="saveProfileSettings()">
+
+          <div style="font-size: 11px; color: var(--text-muted);">ニックネーム</div>
+          <input type="text" id="profile-name" class="chat-input" onchange="saveProfileSettings()">
+
+          <div style="font-size: 11px; color: var(--text-muted);">設定用合言葉</div>
+          <input type="text" id="profile-passphrase" class="chat-input" onchange="saveProfileSettings()">
         </div>
 
         <div class="setting-group">
+          <div style="font-size: 12px; font-weight: 600; margin-bottom: 2px;">プライバシー設定</div>
           <div class="setting-row">
             <span>友達追加を許可しない</span>
             <input type="checkbox" id="setting-block-add" onchange="saveProfileSettings()">
           </div>
           <div class="setting-row">
             <span>オンライン状態を表示する</span>
-            <input type="checkbox" id="setting-show-online" checked onchange="saveProfileSettings()">
+            <input type="checkbox" id="setting-show-online" onchange="saveProfileSettings()">
           </div>
         </div>
         
@@ -596,13 +613,56 @@
       </div>
     </div>
 
-    <!-- ボトムナビゲーション -->
+    <!-- 4. BOARD MODULE -->
+    <div id="tab-board" class="content">
+      <div class="header"><h1>BOARD</h1></div>
+      <div class="board-container">
+        <div class="board-card">
+          <div style="font-weight:600; margin-bottom:4px;">📌 家族のルールメモ</div>
+          <div style="color:var(--text-muted); font-size:13px;">ゴミ出しの曜日や大切なお知らせをいつでも残せます。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. FOCUS MODULE -->
+    <div id="tab-focus" class="content">
+      <div class="header"><h1>FOCUS</h1></div>
+      <div class="focus-container">
+        <div class="focus-mode-switcher">
+          <button class="mode-btn active" id="mode-timer-btn" onclick="switchFocusMode('timer')">タイマー</button>
+          <button class="mode-btn" id="mode-stopwatch-btn" onclick="switchFocusMode('stopwatch')">ストップウォッチ</button>
+        </div>
+
+        <div class="timer-display" id="timer-display">25:00</div>
+
+        <div class="timer-settings-box" id="timer-settings-box">
+          <div style="font-size: 12px; color: var(--text-muted);">時間設定（分）</div>
+          <div style="display: flex; gap: 8px; align-items: center; justify-content: center;">
+            <input type="number" id="custom-minutes" value="25" min="1" max="180" class="chat-input" style="width: 80px; text-align: center;" onchange="updateTimerSettings()">
+            <span style="font-size: 13px;">分</span>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-btn" onclick="setPresetMinutes(10)">10分</button>
+            <button class="preset-btn" onclick="setPresetMinutes(15)">15分</button>
+            <button class="preset-btn" onclick="setPresetMinutes(25)">25分</button>
+            <button class="preset-btn" onclick="setPresetMinutes(50)">50分</button>
+          </div>
+        </div>
+
+        <div class="timer-controls">
+          <button class="timer-btn btn-start" id="timer-toggle-btn" onclick="toggleFocusAction()">スタート</button>
+          <button class="timer-btn btn-reset" onclick="resetFocusAction()">リセット</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ボトムナビゲーション（左から: カレンダー、トーク、マイページ、掲示板、FOCUS） -->
     <nav class="nav-bar">
-      <button class="nav-btn active" onclick="switchTab('talk', this)">TALK</button>
-      <button class="nav-btn" onclick="switchTab('calendar', this)">CALENDAR</button>
-      <button class="nav-btn" onclick="switchTab('study', this)">STUDY</button>
-      <button class="nav-btn" onclick="switchTab('board', this)">BOARD</button>
-      <button class="nav-btn" onclick="switchTab('mypage', this)">MY PAGE</button>
+      <button class="nav-btn" onclick="switchTab('calendar', this)">カレンダー</button>
+      <button class="nav-btn active" onclick="switchTab('talk', this)">トーク</button>
+      <button class="nav-btn" onclick="switchTab('mypage', this)">マイページ</button>
+      <button class="nav-btn" onclick="switchTab('board', this)">掲示板</button>
+      <button class="nav-btn" onclick="switchTab('focus', this)">FOCUS</button>
     </nav>
   </div>
 
@@ -616,7 +676,6 @@
   </div>
 
   <script>
-    /* ---------------- データ初期化 & 永続化 ---------------- */
     let currentTalkSubTab = 'all';
     
     let messages = JSON.parse(localStorage.getItem('family_messages')) || [
@@ -645,18 +704,23 @@
       { date: '2026-10-15', title: '家族会議', visibility: 'group' }
     ];
 
-    let timerInterval = null;
-    let timeLeft = 25 * 60;
-    let isTimerRunning = false;
+    // FOCUS 関連の状態変数
+    let focusMode = 'timer';
+    let focusInterval = null;
+    let isFocusRunning = false;
+    let timerTotalSeconds = 25 * 60;
+    let timerLeftSeconds = 25 * 60;
+    let stopwatchSeconds = 0;
 
-    // 初期読み込み時のマイページフォーム反映
+    // マイページフォームへの反映
+    document.getElementById('profile-myid').value = mySettings.myId;
     document.getElementById('profile-name').value = mySettings.name;
-    document.getElementById('my-id-display').innerText = mySettings.myId;
     document.getElementById('profile-passphrase').value = mySettings.passphrase;
     document.getElementById('setting-block-add').checked = mySettings.blockAdd;
     document.getElementById('setting-show-online').checked = mySettings.showOnline;
 
     function saveProfileSettings() {
+      mySettings.myId = document.getElementById('profile-myid').value;
       mySettings.name = document.getElementById('profile-name').value;
       mySettings.passphrase = document.getElementById('profile-passphrase').value;
       mySettings.blockAdd = document.getElementById('setting-block-add').checked;
@@ -664,7 +728,6 @@
       localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
     }
 
-    /* ---------------- タブ切り替え ---------------- */
     function switchTab(tabId, btnElement) {
       document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -682,12 +745,10 @@
       renderTalkContent();
     }
 
-    /* ---------------- TALK & 友達管理 ---------------- */
     function renderTalkContent(filterText = '') {
       const area = document.getElementById('talk-body-area');
       
       if (currentTalkSubTab === 'add') {
-        // 友達追加画面
         area.innerHTML = `
           <div style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
             <div style="font-size:14px; font-weight:600;">友達をID検索して追加</div>
@@ -699,7 +760,6 @@
         return;
       }
 
-      // 通常のチャットエリア / 友達リストエリアの復元
       area.innerHTML = `
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-area" id="chat-input-area">
@@ -709,7 +769,6 @@
       `;
 
       if (currentTalkSubTab === 'friends') {
-        // 縦並びの友達リスト
         const msgContainer = document.getElementById('chat-messages');
         document.getElementById('chat-input-area').style.display = 'none';
         msgContainer.innerHTML = '';
@@ -738,7 +797,6 @@
       }
 
       if (currentTalkSubTab === 'unapproved') {
-        // 未承認リクエスト一覧
         const msgContainer = document.getElementById('chat-messages');
         document.getElementById('chat-input-area').style.display = 'none';
         msgContainer.innerHTML = '';
@@ -760,7 +818,6 @@
         return;
       }
 
-      // 「全体」または「グループ」タブ：通常のチャット画面
       document.getElementById('chat-input-area').style.display = 'flex';
       renderMessages(filterText);
     }
@@ -841,6 +898,86 @@
       alert(`${approved.name} さんを友達に追加しました！`);
     }
 
+    /* ---------------- FOCUS ---------------- */
+    function switchFocusMode(mode) {
+      if (isFocusRunning) resetFocusAction();
+      focusMode = mode;
+      
+      document.getElementById('mode-timer-btn').classList.toggle('active', mode === 'timer');
+      document.getElementById('mode-stopwatch-btn').classList.toggle('active', mode === 'stopwatch');
+      document.getElementById('timer-settings-box').style.display = (mode === 'timer') ? 'flex' : 'none';
+
+      if (mode === 'timer') {
+        updateTimerDisplay(timerLeftSeconds);
+      } else {
+        stopwatchSeconds = 0;
+        updateTimerDisplay(0);
+      }
+    }
+
+    function setPresetMinutes(mins) {
+      document.getElementById('custom-minutes').value = mins;
+      updateTimerSettings();
+    }
+
+    function updateTimerSettings() {
+      const mins = parseInt(document.getElementById('custom-minutes').value) || 25;
+      timerTotalSeconds = mins * 60;
+      timerLeftSeconds = timerTotalSeconds;
+      if (!isFocusRunning && focusMode === 'timer') {
+        updateTimerDisplay(timerLeftSeconds);
+      }
+    }
+
+    function updateTimerDisplay(totalSec) {
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      document.getElementById('timer-display').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function toggleFocusAction() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (isFocusRunning) {
+        clearInterval(focusInterval);
+        isFocusRunning = false;
+        btn.innerText = 'スタート';
+      } else {
+        isFocusRunning = true;
+        btn.innerText = '一時停止';
+        
+        focusInterval = setInterval(() => {
+          if (focusMode === 'timer') {
+            if (timerLeftSeconds > 0) {
+              timerLeftSeconds--;
+              updateTimerDisplay(timerLeftSeconds);
+            } else {
+              clearInterval(focusInterval);
+              isFocusRunning = false;
+              btn.innerText = 'スタート';
+              alert('タイマー終了！お疲れ様でした！');
+            }
+          } else {
+            stopwatchSeconds++;
+            updateTimerDisplay(stopwatchSeconds);
+          }
+        }, 1000);
+      }
+    }
+
+    function resetFocusAction() {
+      clearInterval(focusInterval);
+      isFocusRunning = false;
+      document.getElementById('timer-toggle-btn').innerText = 'スタート';
+      
+      if (focusMode === 'timer') {
+        timerLeftSeconds = timerTotalSeconds;
+        updateTimerDisplay(timerLeftSeconds);
+      } else {
+        stopwatchSeconds = 0;
+        updateTimerDisplay(0);
+      }
+    }
+
     /* ---------------- CALENDAR ---------------- */
     function renderCalendar() {
       const grid = document.getElementById('cal-grid');
@@ -874,38 +1011,6 @@
       events.push({ date: '2026-10-15', title: title, visibility: 'group' });
       localStorage.setItem('family_events', JSON.stringify(events));
       renderCalendar();
-    }
-
-    /* ---------------- STUDY TIMER ---------------- */
-    function toggleTimer() {
-      const btn = document.getElementById('timer-toggle-btn');
-      if (isTimerRunning) {
-        clearInterval(timerInterval);
-        isTimerRunning = false;
-        btn.innerText = 'スタート';
-      } else {
-        isTimerRunning = true;
-        btn.innerText = '一時停止';
-        timerInterval = setInterval(() => {
-          if (timeLeft > 0) {
-            timeLeft--;
-            const min = Math.floor(timeLeft / 60);
-            const sec = timeLeft % 60;
-            document.getElementById('timer-display').innerText = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-          } else {
-            alert('セッション終了！');
-            resetTimer();
-          }
-        }, 1000);
-      }
-    }
-
-    function resetTimer() {
-      clearInterval(timerInterval);
-      isTimerRunning = false;
-      timeLeft = 25 * 60;
-      document.getElementById('timer-display').innerText = '25:00';
-      document.getElementById('timer-toggle-btn').innerText = 'スタート';
     }
 
     /* ---------------- MINI GAME ---------------- */
