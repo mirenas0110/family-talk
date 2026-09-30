@@ -1,1 +1,992 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5-Tab Modular Web App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
 
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(241, 245, 249, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* Bubble animation */
+    @keyframes bubbleIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .animate-bubble {
+      animation: bubbleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 flex items-center justify-center min-h-screen p-2 md:p-6 antialiased">
+
+  <!-- App Container -->
+  <div id="app" class="w-full max-w-6xl h-[92vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-700/30 relative">
+    
+    <!-- Top Header Bar -->
+    <header class="bg-slate-800 text-white px-6 py-3.5 flex justify-between items-center border-b border-slate-700 shrink-0">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/30">
+          <i class="fa-solid fa-shapes text-white text-base"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-wide flex items-center gap-2">
+            ConnectHub App 
+            <span class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded-full uppercase font-semibold">v2.5 Pro</span>
+          </h1>
+          <p id="currentStatusHeader" class="text-xs text-slate-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+            <span id="headerUserText">User: Guest (🟢 オンライン)</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Profile Indicator -->
+      <div class="flex items-center gap-3">
+        <button onclick="switchTab(3)" class="flex items-center gap-2.5 bg-slate-700/60 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-600/50 transition">
+          <div id="headerAvatar" class="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center font-bold text-xs text-white shadow">
+            ME
+          </div>
+          <span id="headerUserName" class="text-sm font-medium text-slate-200 hidden sm:inline">マイページ</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="flex-1 overflow-hidden relative bg-slate-50">
+
+      <!-- ================= TAB 1: CALENDAR ================= -->
+      <section id="tab1" class="tab-content active w-full h-full p-4 md:p-6 flex-col gap-4 overflow-y-auto">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-regular fa-calendar-check text-blue-500"></i> スケジュールカレンダー
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">タグ管理でグループや個人の予定をフィルタリング共有</p>
+          </div>
+          <!-- Tag Filter Badges -->
+          <div class="flex flex-wrap items-center gap-1.5" id="calendarTagFilters">
+            <button onclick="filterCalendar('all')" class="tag-filter-btn active bg-blue-600 text-white text-xs px-3 py-1.5 rounded-xl font-medium shadow-sm transition">🏷️ すべて</button>
+            <button onclick="filterCalendar('private')" class="tag-filter-btn bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-xl font-medium transition">🔒 プライベート</button>
+            <button onclick="filterCalendar('group')" class="tag-filter-btn bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-xl font-medium transition">👥 グループ</button>
+            <button onclick="filterCalendar('work')" class="tag-filter-btn bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-xl font-medium transition">💼 仕事/勉強</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 flex-1">
+          <!-- Calendar Grid Box -->
+          <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-slate-700 text-base flex items-center gap-2">
+                <button onclick="prevMonth()" class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><i class="fa-solid fa-chevron-left"></i></button>
+                <span id="calendarMonthYear" class="w-36 text-center">2026年 10月</span>
+                <button onclick="nextMonth()" class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><i class="fa-solid fa-chevron-right"></i></button>
+              </h3>
+              <button onclick="openAddEventModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3.5 py-2 rounded-xl font-medium shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-plus"></i> 予定を追加
+              </button>
+            </div>
+
+            <!-- Days of Week -->
+            <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-400 mb-2 py-1 bg-slate-50 rounded-lg">
+              <div class="text-rose-500">日</div>
+              <div>月</div>
+              <div>火</div>
+              <div>水</div>
+              <div>木</div>
+              <div>金</div>
+              <div class="text-blue-500">土</div>
+            </div>
+
+            <!-- Month Days Container -->
+            <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 flex-1 min-h-[300px]">
+              <!-- JS rendered days -->
+            </div>
+          </div>
+
+          <!-- Day Events & Schedule Summary -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+              <h3 id="selectedDateTitle" class="font-bold text-slate-800 text-base">
+                10月10日の予定
+              </h3>
+              <span class="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-semibold">Selected</span>
+            </div>
+
+            <div id="selectedDateEventsList" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+              <!-- JS rendered events -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: MESSAGING ================= -->
+      <section id="tab2" class="tab-content w-full h-full flex-row overflow-hidden">
+        
+        <!-- Talk List View (Left Column on wide, toggleable on mobile) -->
+        <div id="talkListSide" class="w-full md:w-80 lg:w-96 border-r border-slate-200/80 bg-white flex flex-col h-full shrink-0">
+          <!-- Search Header -->
+          <div class="p-4 border-b border-slate-100">
+            <h2 class="font-bold text-lg text-slate-800 mb-3 flex items-center justify-between">
+              <span>💬 トーク一覧</span>
+              <span class="text-xs font-normal text-slate-400" id="totalUsersCount">3 Users</span>
+            </h2>
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="userSearchInput" oninput="renderTalkList()" placeholder="ユーザーやキーワードを検索..." class="w-full bg-slate-100 text-xs rounded-xl pl-9 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/20 border border-transparent focus:border-blue-400 transition">
+            </div>
+          </div>
+
+          <!-- Talk Item List Container -->
+          <div id="talkList" class="flex-1 overflow-y-auto divide-y divide-slate-100">
+            <!-- JS populated contact list -->
+          </div>
+        </div>
+
+        <!-- Individual Chat Room View (Right Column) -->
+        <div id="chatRoomSide" class="flex-1 flex flex-col h-full bg-slate-50/60 relative">
+          
+          <!-- Empty Chat Placeholder State -->
+          <div id="noChatSelectedState" class="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400">
+            <div class="w-16 h-16 rounded-full bg-slate-200/60 flex items-center justify-center text-2xl mb-3 text-slate-400">
+              <i class="fa-regular fa-comments"></i>
+            </div>
+            <p class="font-medium text-slate-600 text-sm">トークを開始するユーザーを選択してください</p>
+            <p class="text-xs text-slate-400 mt-1">左側のリストから相手を選ぶとメッセージ履歴が表示されます</p>
+          </div>
+
+          <!-- Active Chat Container -->
+          <div id="activeChatContainer" class="flex-1 flex flex-col h-full hidden">
+            
+            <!-- Chat Header -->
+            <div class="bg-white/90 backdrop-blur px-5 py-3 border-b border-slate-200/80 flex items-center justify-between shrink-0 shadow-sm">
+              <div class="flex items-center gap-3">
+                <button onclick="backToTalkListOnMobile()" class="md:hidden p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg">
+                  <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="relative">
+                  <div id="chatTargetAvatar" class="w-10 h-10 rounded-full bg-indigo-500 text-white font-bold flex items-center justify-center text-sm shadow">
+                    U
+                  </div>
+                  <span id="chatTargetStatusDot" class="w-3 h-3 rounded-full bg-emerald-500 border-2 border-white absolute bottom-0 right-0"></span>
+                </div>
+                <div>
+                  <h3 id="chatTargetName" class="font-bold text-sm text-slate-800">ユーザー</h3>
+                  <span id="chatTargetStatusText" class="text-[11px] text-slate-400">🟢 オンライン</span>
+                </div>
+              </div>
+
+              <!-- Chat In-Room Search Bar -->
+              <div class="flex items-center gap-2">
+                <div class="relative w-36 sm:w-48">
+                  <i class="fa-solid fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]"></i>
+                  <input type="text" id="msgSearchInput" onkeyup="searchInChat()" placeholder="トーク内検索..." class="w-full bg-slate-100 text-[11px] rounded-lg pl-7 pr-2 py-1.5 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages Log -->
+            <div id="chatLog" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3.5">
+              <!-- Dynamic Messages populated via JS -->
+            </div>
+
+            <!-- Emoji Stamp Picker Popover -->
+            <div id="stampPicker" class="hidden absolute bottom-16 left-4 bg-white p-3 rounded-2xl shadow-xl border border-slate-200 z-20 animate-bubble flex gap-2 text-2xl">
+              <button onclick="sendStamp('👍')" class="hover:scale-125 transition transform">👍</button>
+              <button onclick="sendStamp('😊')" class="hover:scale-125 transition transform">😊</button>
+              <button onclick="sendStamp('❤️')" class="hover:scale-125 transition transform">❤️</button>
+              <button onclick="sendStamp('🎉')" class="hover:scale-125 transition transform">🎉</button>
+              <button onclick="sendStamp('🙏')" class="hover:scale-125 transition transform">🙏</button>
+              <button onclick="sendStamp('🔥')" class="hover:scale-125 transition transform">🔥</button>
+              <button onclick="sendStamp('👌')" class="hover:scale-125 transition transform">👌</button>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="bg-white p-3 md:p-4 border-t border-slate-200/80 flex items-center gap-2 shrink-0">
+              <button onclick="toggleStampPicker()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-lg flex items-center justify-center transition shrink-0">
+                😊
+              </button>
+              <input type="text" id="chatInput" onkeypress="handleKeyPress(event)" placeholder="メッセージを入力... (Enterで送信)" class="flex-1 bg-slate-100 text-sm rounded-xl px-4 py-2.5 outline-none border border-transparent focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition">
+              <button onclick="sendChat()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-5 py-2.5 rounded-xl shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition shrink-0">
+                <span>送信</span>
+                <i class="fa-solid fa-paper-plane text-xs"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: PROFILE / MY PAGE ================= -->
+      <section id="tab3" class="tab-content w-full h-full p-4 md:p-8 overflow-y-auto flex-col items-center">
+        <div class="w-full max-w-2xl bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-sm space-y-6">
+          
+          <div class="border-b border-slate-100 pb-4">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-user-gear text-blue-500"></i> マイページ & カスタマイズ
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">自分のステータス表示やチャット吹き出しカラーの設定ができます</p>
+          </div>
+
+          <!-- User Card Preview -->
+          <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <div id="profileAvatarBig" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white font-bold text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              ME
+            </div>
+            <div>
+              <h3 id="profileNameDisplay" class="font-bold text-lg text-slate-800">Guest User</h3>
+              <p id="profileStatusDisplay" class="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                <span>🟢 オンライン</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Status Selector -->
+          <div class="space-y-2">
+            <label class="block font-bold text-sm text-slate-700">オンラインステータス設定</label>
+            <select id="statusSelect" onchange="updateMyStatus()" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
+              <option value="🟢 オンライン">🟢 オンライン</option>
+              <option value="🟡 席外し">🟡 席外し</option>
+              <option value="⚪ オフライン">⚪ オフライン（隠す）</option>
+            </select>
+          </div>
+
+          <!-- Custom Bubble Color Selector -->
+          <div class="space-y-3">
+            <label class="block font-bold text-sm text-slate-700">チャット吹き出しカラー (自分のメッセージ)</label>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              <button onclick="setThemeColor('#8bbabb')" class="color-picker-btn p-3 rounded-2xl border border-slate-200 flex flex-col items-center gap-2 hover:border-slate-400 transition" style="background-color: #f0f7f7;">
+                <span class="w-6 h-6 rounded-full border border-white shadow-sm" style="background-color: #8bbabb;"></span>
+                <span class="text-xs font-medium text-slate-700">淡いブルー</span>
+              </button>
+
+              <button onclick="setThemeColor('#81c784')" class="color-picker-btn p-3 rounded-2xl border border-slate-200 flex flex-col items-center gap-2 hover:border-slate-400 transition" style="background-color: #f1f8f2;">
+                <span class="w-6 h-6 rounded-full border border-white shadow-sm" style="background-color: #81c784;"></span>
+                <span class="text-xs font-medium text-slate-700">淡いグリーン</span>
+              </button>
+
+              <button onclick="setThemeColor('#f8bbd0')" class="color-picker-btn p-3 rounded-2xl border border-slate-200 flex flex-col items-center gap-2 hover:border-slate-400 transition" style="background-color: #fcf0f4;">
+                <span class="w-6 h-6 rounded-full border border-white shadow-sm" style="background-color: #f8bbd0;"></span>
+                <span class="text-xs font-medium text-slate-700">淡いピンク</span>
+              </button>
+
+              <button onclick="setThemeColor('#b39ddb')" class="color-picker-btn p-3 rounded-2xl border border-slate-200 flex flex-col items-center gap-2 hover:border-slate-400 transition" style="background-color: #f5f2f9;">
+                <span class="w-6 h-6 rounded-full border border-white shadow-sm" style="background-color: #b39ddb;"></span>
+                <span class="text-xs font-medium text-slate-700">パープル</span>
+              </button>
+
+              <button onclick="setThemeColor('#ffab91')" class="color-picker-btn p-3 rounded-2xl border border-slate-200 flex flex-col items-center gap-2 hover:border-slate-400 transition" style="background-color: #fdf4f1;">
+                <span class="w-6 h-6 rounded-full border border-white shadow-sm" style="background-color: #ffab91;"></span>
+                <span class="text-xs font-medium text-slate-700">コーラル</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview Chat Bubble Box -->
+          <div class="p-4 bg-slate-100 rounded-2xl border border-slate-200/80 space-y-2">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">リアルタイム表示プレビュー</p>
+            <div class="flex justify-end">
+              <div id="previewBubble" class="px-4 py-2.5 rounded-2xl rounded-br-none text-white text-sm font-medium shadow-sm transition-colors duration-200" style="background-color: #8bbabb;">
+                これはプレビューメッセージです！✨
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: BLOG ================= -->
+      <section id="tab4" class="tab-content w-full h-full p-4 md:p-6 flex-col gap-4 overflow-y-auto">
+        <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-newspaper text-blue-500"></i> チームブログ & お知らせ
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">近況報告や雑談記事を自由に投稿・閲覧できます</p>
+          </div>
+          <button onclick="openBlogModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-xl font-medium shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-pen"></i> 記事を書く
+          </button>
+        </div>
+
+        <!-- Blog Feed Container -->
+        <div id="blogPostFeed" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- JS dynamic blog posts -->
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: MINI-GAME ================= -->
+      <section id="tab5" class="tab-content w-full h-full p-4 md:p-6 flex-col items-center justify-center overflow-y-auto">
+        <div class="w-full max-w-xl bg-white rounded-3xl p-6 border border-slate-200/80 shadow-md text-center flex flex-col items-center gap-4">
+          <div>
+            <span class="text-xs font-bold bg-amber-100 text-amber-700 px-3 py-1 rounded-full uppercase">Mini Game</span>
+            <h2 class="text-2xl font-bold text-slate-800 mt-2 flex items-center justify-center gap-2">
+              🧠 Emoji Memory Challenge
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">同じ絵文字のカードを揃えて全ペアをクリアしよう！</p>
+          </div>
+
+          <!-- Stats Dashboard -->
+          <div class="grid grid-cols-3 gap-3 w-full bg-slate-50 p-3 rounded-2xl border border-slate-100">
+            <div>
+              <span class="text-[11px] text-slate-400 font-bold block">MOVES</span>
+              <span id="gameMoves" class="font-extrabold text-slate-700 text-lg">0</span>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 font-bold block">PAIRS</span>
+              <span id="gamePairs" class="font-extrabold text-blue-600 text-lg">0 / 6</span>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 font-bold block">BEST</span>
+              <span id="gameBest" class="font-extrabold text-amber-500 text-lg">-</span>
+            </div>
+          </div>
+
+          <!-- Card Memory Grid -->
+          <div id="gameGrid" class="grid grid-cols-4 gap-2.5 w-full max-w-md my-2">
+            <!-- Dynamic JS cards -->
+          </div>
+
+          <button onclick="resetGame()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-5 py-2.5 rounded-xl font-medium shadow transition flex items-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i> ゲームをリセット
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom 5-Tab Navigation Bar -->
+    <nav class="bg-white border-t border-slate-200/80 px-2 py-2 flex justify-around items-center shrink-0 z-10">
+      <button onclick="switchTab(1)" class="nav-btn active flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+        <i class="fa-regular fa-calendar-days text-lg"></i>
+        <span class="text-[11px] font-semibold mt-1">カレンダー</span>
+      </button>
+
+      <button onclick="switchTab(2)" class="nav-btn flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl text-slate-400 hover:text-slate-600 transition relative">
+        <i class="fa-regular fa-comment-dots text-lg"></i>
+        <span class="text-[11px] font-semibold mt-1">メッセージ</span>
+        <span id="navUnreadDot" class="w-2.5 h-2.5 rounded-full bg-rose-500 absolute top-1.5 right-[30%] hidden"></span>
+      </button>
+
+      <button onclick="switchTab(3)" class="nav-btn flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+        <i class="fa-regular fa-user text-lg"></i>
+        <span class="text-[11px] font-semibold mt-1">マイページ</span>
+      </button>
+
+      <button onclick="switchTab(4)" class="nav-btn flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+        <i class="fa-regular fa-newspaper text-lg"></i>
+        <span class="text-[11px] font-semibold mt-1">ブログ</span>
+      </button>
+
+      <button onclick="switchTab(5)" class="nav-btn flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+        <i class="fa-solid fa-gamepad text-lg"></i>
+        <span class="text-[11px] font-semibold mt-1">ゲーム</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modal: Add Calendar Event -->
+  <div id="addEventModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl animate-bubble">
+      <h3 class="text-lg font-bold text-slate-800 mb-4">新しい予定を追加</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">タイトル</label>
+          <input type="text" id="eventTitleInput" placeholder="例: オンラインミーティング" class="w-full bg-slate-100 rounded-xl px-3.5 py-2 text-sm border outline-none focus:ring-2 focus:ring-blue-500/20">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">時間</label>
+          <input type="time" id="eventTimeInput" value="19:00" class="w-full bg-slate-100 rounded-xl px-3.5 py-2 text-sm border outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">共有タグ</label>
+          <select id="eventTagSelect" class="w-full bg-slate-100 rounded-xl px-3.5 py-2 text-sm border outline-none">
+            <option value="private">🔒 プライベート</option>
+            <option value="group">👥 グループ</option>
+            <option value="work">💼 仕事/勉強</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button onclick="closeAddEventModal()" class="px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-xl">キャンセル</button>
+        <button onclick="saveNewCalendarEvent()" class="px-4 py-2 text-xs font-medium bg-blue-600 text-white rounded-xl shadow">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: New Blog Post -->
+  <div id="blogModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl animate-bubble">
+      <h3 class="text-lg font-bold text-slate-800 mb-4">ブログ記事を投稿</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">タイトル</label>
+          <input type="text" id="blogTitleInput" placeholder="記事のタイトル..." class="w-full bg-slate-100 rounded-xl px-3.5 py-2 text-sm border outline-none focus:ring-2 focus:ring-blue-500/20">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">本文</label>
+          <textarea id="blogBodyInput" rows="4" placeholder="本文を入力してください..." class="w-full bg-slate-100 rounded-xl px-3.5 py-2 text-sm border outline-none focus:ring-2 focus:ring-blue-500/20"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button onclick="closeBlogModal()" class="px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-100 rounded-xl">キャンセル</button>
+        <button onclick="publishBlogPost()" class="px-4 py-2 text-xs font-medium bg-blue-600 text-white rounded-xl shadow">投稿する</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ================= APP GLOBAL STATE ================= */
+    let currentUserId = "ME";
+    let myBubbleColor = "#8bbabb"; // Default soft blue
+    let myStatus = "🟢 オンライン";
+
+    // Mock Users
+    let users = {
+      "User_A": { name: "田中 太郎", status: "🟢 オンライン", avatarBg: "bg-emerald-500" },
+      "User_B": { name: "佐藤 花子", status: "🟡 席外し", avatarBg: "bg-amber-500" },
+      "User_C": { name: "鈴木 健太", status: "⚪ オフライン", avatarBg: "bg-slate-400" }
+    };
+
+    // Chat Messages Storage by Room
+    let rooms = {
+      "ME_User_A": [
+        { id: "m1", sender: "User_A", text: "こんにちは！今日のミーティングは何時でしたっけ？", timestamp: Date.now() - 3600000, read: true, deleted: false },
+        { id: "m2", sender: "ME", text: "19:00からの予定だよ！カレンダーにも入れておくね。", timestamp: Date.now() - 1800000, read: true, deleted: false }
+      ],
+      "ME_User_B": [
+        { id: "m3", sender: "User_B", text: "昨日のブログ読みました！👍", timestamp: Date.now() - 86400000, read: false, deleted: false }
+      ],
+      "ME_User_C": []
+    };
+
+    let activeTargetId = null;
+
+    // Calendar Storage
+    let calendarEvents = [
+      { id: 1, date: "2026-10-10", time: "19:00", title: "👥 オンライン対戦大会", tag: "group" },
+      { id: 2, date: "2026-10-12", time: "10:00", title: "🔒 定期病院受診", tag: "private" },
+      { id: 3, date: "2026-10-15", time: "14:00", title: "💼 チーム企画会議", tag: "work" }
+    ];
+    let activeCalendarFilter = "all";
+    let selectedCalendarDate = "2026-10-10";
+
+    // Blog Posts
+    let blogPosts = [
+      { id: 1, title: "新しいメッセージ機能について", author: "田中 太郎", date: "2026/10/01", body: "吹き出しのカラーカスタマイズやスタンプ機能を追加しました！マイページから試してみてください。" },
+      { id: 2, title: "週末のゲーム大会のおしらせ", author: "佐藤 花子", date: "2026/09/28", body: "10月10日の19:00からミニゲームタブで対戦イベントを開催します！みんな参加してね。" }
+    ];
+
+    // Initialize App
+    window.addEventListener('load', () => {
+      renderTalkList();
+      renderCalendar();
+      renderBlogPosts();
+      initGame();
+    });
+
+    // Navigation Switcher
+    function switchTab(tabNum) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-blue-600', 'active');
+        btn.classList.add('text-slate-400');
+      });
+
+      const targetTab = document.getElementById(`tab${tabNum}`);
+      if (targetTab) targetTab.classList.add('active');
+
+      const navBtns = document.querySelectorAll('.nav-btn');
+      if (navBtns[tabNum - 1]) {
+        navBtns[tabNum - 1].classList.add('text-blue-600', 'active');
+        navBtns[tabNum - 1].classList.remove('text-slate-400');
+      }
+    }
+
+    // Profile Settings Updates
+    function updateMyStatus() {
+      myStatus = document.getElementById('statusSelect').value;
+      document.getElementById('headerUserText').innerText = `User: Guest (${myStatus})`;
+      document.getElementById('profileStatusDisplay').innerText = myStatus;
+    }
+
+    function setThemeColor(colorHex) {
+      myBubbleColor = colorHex;
+      document.getElementById('previewBubble').style.backgroundColor = colorHex;
+      
+      // Update any rendered chat messages instantly
+      if (activeTargetId) {
+        renderChatLog();
+      }
+    }
+
+    /* ================= MESSAGING FUNCTIONS ================= */
+    function getRoomId(u1, u2) {
+      return [u1, u2].sort().join('_');
+    }
+
+    function renderTalkList() {
+      const talkListEl = document.getElementById('talkList');
+      const searchVal = document.getElementById('userSearchInput').value.toLowerCase();
+      talkListEl.innerHTML = '';
+
+      let hasUnreadGlobal = false;
+
+      Object.keys(users).forEach(uId => {
+        const u = users[uId];
+        if (searchVal && !u.name.toLowerCase().includes(searchVal) && !uId.toLowerCase().includes(searchVal)) {
+          return;
+        }
+
+        const roomId = getRoomId(currentUserId, uId);
+        const msgs = rooms[roomId] || [];
+        const lastMsg = msgs[msgs.length - 1];
+
+        let lastMsgText = "メッセージはまだありません";
+        let lastTimeStr = "";
+        let isUnread = false;
+
+        if (lastMsg) {
+          lastMsgText = lastMsg.deleted ? "メッセージが削除されました" : lastMsg.text;
+          const d = new Date(lastMsg.timestamp);
+          lastTimeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+          
+          if (lastMsg.sender !== currentUserId && !lastMsg.read) {
+            isUnread = true;
+            hasUnreadGlobal = true;
+          }
+        }
+
+        const itemHtml = `
+          <div onclick="openChatRoom('${uId}')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition ${activeTargetId === uId ? 'bg-blue-50/60 border-r-4 border-blue-600' : ''}">
+            <div class="flex items-center gap-3 overflow-hidden">
+              <div class="relative shrink-0">
+                <div class="w-11 h-11 rounded-full ${u.avatarBg} text-white font-bold flex items-center justify-center text-sm shadow-sm">
+                  ${u.name.charAt(0)}
+                </div>
+                <span class="w-3 h-3 rounded-full ${u.status.includes('オンライン') ? 'bg-emerald-500' : u.status.includes('席外し') ? 'bg-amber-500' : 'bg-slate-300'} border-2 border-white absolute bottom-0 right-0"></span>
+              </div>
+              <div class="truncate">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm text-slate-800 truncate">${u.name}</span>
+                </div>
+                <p class="text-xs text-slate-400 truncate mt-0.5">${lastMsgText}</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0 ml-2">
+              <div class="text-[10px] text-slate-400">${lastTimeStr}</div>
+              ${isUnread ? '<span class="text-xs inline-block mt-1">🔴</span>' : ''}
+            </div>
+          </div>
+        `;
+        talkListEl.innerHTML += itemHtml;
+      });
+
+      document.getElementById('navUnreadDot').classList.toggle('hidden', !hasUnreadGlobal);
+    }
+
+    function openChatRoom(targetId) {
+      activeTargetId = targetId;
+      const targetUser = users[targetId];
+
+      document.getElementById('noChatSelectedState').classList.add('hidden');
+      document.getElementById('activeChatContainer').classList.remove('hidden');
+
+      document.getElementById('chatTargetName').innerText = targetUser.name;
+      document.getElementById('chatTargetStatusText').innerText = targetUser.status;
+      document.getElementById('chatTargetAvatar').innerText = targetUser.name.charAt(0);
+
+      // Mark messages as read
+      const roomId = getRoomId(currentUserId, targetId);
+      if (rooms[roomId]) {
+        rooms[roomId].forEach(m => {
+          if (m.sender !== currentUserId) m.read = true;
+        });
+      }
+
+      renderTalkList();
+      renderChatLog();
+    }
+
+    function renderChatLog() {
+      if (!activeTargetId) return;
+      const chatLog = document.getElementById('chatLog');
+      chatLog.innerHTML = '';
+
+      const roomId = getRoomId(currentUserId, activeTargetId);
+      const msgs = rooms[roomId] || [];
+
+      msgs.forEach(m => {
+        const isMe = m.sender === currentUserId;
+        const d = new Date(m.timestamp);
+        const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+        const bubbleText = m.deleted ? `<i class="text-slate-400">メッセージが削除されました</i>` : m.text;
+        
+        const msgRow = `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-bubble">
+            ${!isMe ? `<span class="text-[11px] text-slate-400 mb-1 ml-1">${users[m.sender]?.name || m.sender}</span>` : ''}
+            <div class="flex items-end gap-1.5 ${isMe ? 'flex-row-reverse' : 'flex-row'} max-w-[80%]">
+              <div class="px-4 py-2.5 rounded-2xl ${isMe ? 'rounded-br-xs text-white' : 'rounded-bl-xs bg-white text-slate-800 shadow-sm border border-slate-100'} text-sm leading-relaxed break-words"
+                   style="${isMe && !m.deleted ? `background-color: ${myBubbleColor};` : ''}">
+                ${bubbleText}
+              </div>
+              <div class="text-[10px] text-slate-400 shrink-0 pb-0.5">
+                ${timeStr}
+                ${isMe && m.read ? '<span class="text-blue-500 font-bold ml-1">既読</span>' : ''}
+                ${isMe && !m.deleted ? `<button onclick="deleteMsg('${m.id}')" class="text-slate-300 hover:text-rose-500 ml-1.5 transition"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+        chatLog.innerHTML += msgRow;
+      });
+
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text || !activeTargetId) return;
+
+      const roomId = getRoomId(currentUserId, activeTargetId);
+      if (!rooms[roomId]) rooms[roomId] = [];
+
+      rooms[roomId].push({
+        id: 'msg_' + Date.now(),
+        sender: currentUserId,
+        text: text,
+        timestamp: Date.now(),
+        read: false,
+        deleted: false
+      });
+
+      input.value = '';
+      document.getElementById('stampPicker').classList.add('hidden');
+      renderChatLog();
+      renderTalkList();
+    }
+
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') sendChat();
+    }
+
+    function deleteMsg(msgId) {
+      const roomId = getRoomId(currentUserId, activeTargetId);
+      const msg = rooms[roomId].find(m => m.id === msgId);
+      if (msg) {
+        msg.deleted = true;
+        renderChatLog();
+        renderTalkList();
+      }
+    }
+
+    function toggleStampPicker() {
+      document.getElementById('stampPicker').classList.toggle('hidden');
+    }
+
+    function sendStamp(emoji) {
+      const input = document.getElementById('chatInput');
+      input.value += emoji;
+      sendChat();
+    }
+
+    function searchInChat() {
+      const query = document.getElementById('msgSearchInput').value.toLowerCase();
+      const chatLog = document.getElementById('chatLog');
+      const bubbles = chatLog.querySelectorAll('.rounded-2xl');
+
+      bubbles.forEach(b => {
+        if (query && b.innerText.toLowerCase().includes(query)) {
+          b.classList.add('ring-2', 'ring-amber-400');
+        } else {
+          b.classList.remove('ring-2', 'ring-amber-400');
+        }
+      });
+    }
+
+    function backToTalkListOnMobile() {
+      document.getElementById('activeChatContainer').classList.add('hidden');
+      document.getElementById('noChatSelectedState').classList.remove('hidden');
+      activeTargetId = null;
+      renderTalkList();
+    }
+
+    /* ================= CALENDAR FUNCTIONS ================= */
+    function renderCalendar() {
+      const daysGrid = document.getElementById('calendarDaysGrid');
+      daysGrid.innerHTML = '';
+
+      // Render 31 days dummy month
+      for (let day = 1; day <= 31; day++) {
+        const dateStr = `2026-10-${String(day).padStart(2,'0')}`;
+        
+        // Check events matching filter
+        const dayEvents = calendarEvents.filter(e => {
+          if (e.date !== dateStr) return false;
+          if (activeCalendarFilter === 'all') return true;
+          return e.tag === activeCalendarFilter;
+        });
+
+        const isSelected = dateStr === selectedCalendarDate;
+
+        const dayCell = document.createElement('div');
+        dayCell.className = `p-1.5 rounded-xl border ${isSelected ? 'border-blue-600 bg-blue-50/50' : 'border-slate-100 bg-white hover:bg-slate-50'} flex flex-col justify-between cursor-pointer transition min-h-[52px]`;
+        dayCell.onclick = () => selectCalendarDate(dateStr);
+
+        let dotsHtml = dayEvents.map(ev => {
+          let color = 'bg-blue-500';
+          if (ev.tag === 'private') color = 'bg-rose-500';
+          if (ev.tag === 'work') color = 'bg-amber-500';
+          return `<span class="w-1.5 h-1.5 rounded-full ${color}"></span>`;
+        }).join('');
+
+        dayCell.innerHTML = `
+          <span class="text-xs font-bold ${isSelected ? 'text-blue-600' : 'text-slate-700'}">${day}</span>
+          <div class="flex gap-1 flex-wrap">${dotsHtml}</div>
+        `;
+
+        daysGrid.appendChild(dayCell);
+      }
+
+      renderSelectedDateEvents();
+    }
+
+    function selectCalendarDate(dateStr) {
+      selectedCalendarDate = dateStr;
+      document.getElementById('selectedDateTitle').innerText = `${dateStr.replace('2026-', '').replace('-', '月')}日の予定`;
+      renderCalendar();
+    }
+
+    function renderSelectedDateEvents() {
+      const listEl = document.getElementById('selectedDateEventsList');
+      listEl.innerHTML = '';
+
+      const matched = calendarEvents.filter(e => e.date === selectedCalendarDate);
+
+      if (matched.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">予定はありません</p>`;
+        return;
+      }
+
+      matched.forEach(ev => {
+        let tagBadge = '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">👥 グループ</span>';
+        if (ev.tag === 'private') tagBadge = '<span class="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold">🔒 プライベート</span>';
+        if (ev.tag === 'work') tagBadge = '<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">💼 仕事/勉強</span>';
+
+        const itemHtml = `
+          <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-500">${ev.time}</span>
+              ${tagBadge}
+            </div>
+            <p class="font-bold text-sm text-slate-800">${ev.title}</p>
+            <button onclick="shareEventToChat('${ev.title}', '${ev.time}')" class="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition">
+              <i class="fa-solid fa-share-nodes"></i> チャットにこの予定を共有
+            </button>
+          </div>
+        `;
+        listEl.innerHTML += itemHtml;
+      });
+    }
+
+    function filterCalendar(tag) {
+      activeCalendarFilter = tag;
+      document.querySelectorAll('#calendarTagFilters button').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      event.target.classList.add('bg-blue-600', 'text-white');
+      event.target.classList.remove('bg-slate-100', 'text-slate-600');
+      renderCalendar();
+    }
+
+    function shareEventToChat(title, time) {
+      const shareText = `📅 予定を共有します: 【${title}】 (${selectedCalendarDate} ${time})`;
+      switchTab(2);
+      if (!activeTargetId) openChatRoom('User_A');
+      document.getElementById('chatInput').value = shareText;
+    }
+
+    function openAddEventModal() { document.getElementById('addEventModal').classList.remove('hidden'); }
+    function closeAddEventModal() { document.getElementById('addEventModal').classList.add('hidden'); }
+
+    function saveNewCalendarEvent() {
+      const title = document.getElementById('eventTitleInput').value.trim();
+      const time = document.getElementById('eventTimeInput').value;
+      const tag = document.getElementById('eventTagSelect').value;
+
+      if (!title) return;
+
+      calendarEvents.push({
+        id: Date.now(),
+        date: selectedCalendarDate,
+        time: time,
+        title: title,
+        tag: tag
+      });
+
+      closeAddEventModal();
+      document.getElementById('eventTitleInput').value = '';
+      renderCalendar();
+    }
+
+    /* ================= BLOG FUNCTIONS ================= */
+    function renderBlogPosts() {
+      const feed = document.getElementById('blogPostFeed');
+      feed.innerHTML = '';
+
+      blogPosts.forEach(post => {
+        const postCard = `
+          <article class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div class="space-y-2">
+              <div class="flex justify-between items-center text-xs text-slate-400">
+                <span>👤 ${post.author}</span>
+                <span>${post.date}</span>
+              </div>
+              <h3 class="font-bold text-base text-slate-800 leading-snug">${post.title}</h3>
+              <p class="text-xs text-slate-600 leading-relaxed">${post.body}</p>
+            </div>
+          </article>
+        `;
+        feed.innerHTML += postCard;
+      });
+    }
+
+    function openBlogModal() { document.getElementById('blogModal').classList.remove('hidden'); }
+    function closeBlogModal() { document.getElementById('blogModal').classList.add('hidden'); }
+
+    function publishBlogPost() {
+      const title = document.getElementById('blogTitleInput').value.trim();
+      const body = document.getElementById('blogBodyInput').value.trim();
+
+      if (!title || !body) return;
+
+      const d = new Date();
+      const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+
+      blogPosts.unshift({
+        id: Date.now(),
+        title: title,
+        author: "Guest (あなた)",
+        date: dateStr,
+        body: body
+      });
+
+      closeBlogModal();
+      document.getElementById('blogTitleInput').value = '';
+      document.getElementById('blogBodyInput').value = '';
+      renderBlogPosts();
+    }
+
+    /* ================= MINI-GAME FUNCTIONS ================= */
+    const gameEmojis = ['🎮', '🎲', '🚀', '⭐', '🍕', '🐱'];
+    let gameCards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+
+    function initGame() {
+      const grid = document.getElementById('gameGrid');
+      grid.innerHTML = '';
+      
+      const deck = [...gameEmojis, ...gameEmojis].sort(() => Math.random() - 0.5);
+      gameCards = deck;
+      flippedCards = [];
+      matchedPairs = 0;
+      moves = 0;
+
+      document.getElementById('gameMoves').innerText = '0';
+      document.getElementById('gamePairs').innerText = '0 / 6';
+
+      deck.forEach((emoji, index) => {
+        const card = document.createElement('button');
+        card.className = 'h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-2xl flex items-center justify-center border border-slate-200 transition transform duration-150';
+        card.dataset.index = index;
+        card.innerText = '❓';
+        card.onclick = () => flipCard(card, emoji, index);
+        grid.appendChild(card);
+      });
+    }
+
+    function flipCard(cardEl, emoji, index) {
+      if (flippedCards.length >= 2 || cardEl.innerText !== '❓') return;
+
+      cardEl.innerText = emoji;
+      cardEl.classList.add('bg-blue-50', 'border-blue-400');
+      flippedCards.push({ cardEl, emoji, index });
+
+      if (flippedCards.length === 2) {
+        moves++;
+        document.getElementById('gameMoves').innerText = moves;
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const [c1, c2] = flippedCards;
+
+      if (c1.emoji === c2.emoji) {
+        matchedPairs++;
+        document.getElementById('gamePairs').innerText = `${matchedPairs} / 6`;
+        c1.cardEl.classList.add('bg-emerald-100', 'border-emerald-400');
+        c2.cardEl.classList.add('bg-emerald-100', 'border-emerald-400');
+        flippedCards = [];
+
+        if (matchedPairs === 6) {
+          setTimeout(() => alert(`🎉 クリアおめでとうございます！ (手数: ${moves})`), 200);
+        }
+      } else {
+        setTimeout(() => {
+          c1.cardEl.innerText = '❓';
+          c2.cardEl.innerText = '❓';
+          c1.cardEl.classList.remove('bg-blue-50', 'border-blue-400');
+          c2.cardEl.classList.remove('bg-blue-50', 'border-blue-400');
+          flippedCards = [];
+        }, 800);
+      }
+    }
+
+    function resetGame() {
+      initGame();
+    }
+  </script>
+</body>
+</html>
