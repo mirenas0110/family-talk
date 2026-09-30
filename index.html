@@ -1,34 +1,1384 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minimal Family & Study App</title>
-  <style>
-    :root {
-      --bg-color: #f7f6f3;
-      --surface-color: #ffffff;
-      --border-color: #e2ded5;
-      --border-dark: #d0cbc0;
-      --text-main: #383634;
-      --text-muted: #7c766e;
-      --accent: #5a554e;
-      --bubble-me: #eae5dc;
-      --bubble-other: #ffffff;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Message App</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            --border-color: #e2e8f0;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+            --radius: 12px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
-body {
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  display: flex;
-  justify-content: center;
-  height: 100vh;
-  overflow: hidden;
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background-color: var(--surface-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (min-width: 481px) {
+            #app {
+                height: 90vh;
+                max-height: 850px;
+                border-radius: 20px;
+                border: 1px solid var(--border-color);
+            }
+        }
+
+        /* 共通UIパーツ */
+        .hidden { display: none !important; }
+        
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            outline: none;
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        /* 認証画面 */
+        #auth-screen {
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .auth-header {
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .auth-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .auth-switch {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch span {
+            color: var(--accent-color);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-switch span:hover {
+            text-decoration: underline;
+        }
+
+        .error-msg {
+            color: var(--danger-color);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* メインアプリ画面 */
+        #main-app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* コンテンツエリア */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            background-color: var(--bg-color);
+        }
+
+        .tab-content {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* 下部タブバー (5個) */
+        .bottom-nav {
+            height: 65px;
+            background-color: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 8px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            height: 100%;
+            transition: var(--transition);
+            gap: 4px;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+            font-size: 13px; /* 開いているタブは大きくする */
+            font-weight: 700;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            transition: var(--transition);
+        }
+
+        .nav-item.active svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* --- トークタブ関連 --- */
+        .talk-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--surface-color);
+        }
+
+        .talk-top-bar {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .talk-search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .talk-search-row input {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .add-btn {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0 14px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .talk-headers {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .talk-header-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .talk-header-tab.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
+
+        .talk-list-area {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .list-item:hover {
+            background-color: var(--bg-color);
+        }
+
+        .list-item-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .list-item-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .list-item-action {
+            display: flex;
+            gap: 6px;
+        }
+
+        /* チャット画面ビュー */
+        .chat-room-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: var(--surface-color);
+            position: absolute;
+            top: 0; left: 0; width: 100%; z-index: 50;
+        }
+
+        .chat-room-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: var(--bg-color);
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .message-bubble.my {
+            background-color: var(--accent-color);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-bubble.other {
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            background: var(--surface-color);
+        }
+
+        .chat-input-area input {
+            padding: 10px 14px;
+        }
+
+        /* モーダル共通 */
+        .modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-card {
+            background: var(--surface-color);
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        /* --- 各タブの中身 --- */
+        .tab-pane {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .pane-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        /* カレンダータブ */
+        .calendar-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .event-item {
+            padding: 10px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* メインタブ (ダッシュボード) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .dashboard-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .dashboard-card h4 {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .dashboard-card .value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* 掲示板タブ */
+        .post-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* FOCUSタブ (タスク & タイマー) */
+        .focus-timer-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: var(--radius);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .timer-display {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        .timer-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .task-input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .task-item {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        .task-item.completed span {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- 認証画面 (ログイン / 新規登録) -->
+        <div id="auth-screen">
+            <div class="auth-header">
+                <h1 id="auth-title">ログイン</h1>
+                <p id="auth-subtitle">アカウント情報を入力してください</p>
+            </div>
+            <div class="auth-form">
+                <div class="input-group">
+                    <label>ID</label>
+                    <input type="text" id="auth-id" placeholder="半角英数字ID">
+                </div>
+                <div class="input-group">
+                    <label>パスワード</label>
+                    <input type="password" id="auth-pass" placeholder="パスワード">
+                </div>
+                <div id="signup-extra-group" class="input-group hidden">
+                    <label>表示名 (ニックネーム)</label>
+                    <input type="text" id="auth-name" placeholder="例: 山田 太郎">
+                </div>
+                <div class="checkbox-group" id="remember-group">
+                    <input type="checkbox" id="auth-remember">
+                    <label for="auth-remember">ログインしたままにする</label>
+                </div>
+                <div id="auth-error" class="error-msg"></div>
+                <button class="btn-primary" id="auth-submit-btn" onclick="handleAuthSubmit()">ログイン</button>
+            </div>
+            <div class="auth-switch">
+                <span id="auth-switch-text" onclick="toggleAuthMode()">アカウントをお持ちでない方は新規登録</span>
+            </div>
+        </div>
+
+        <!-- メインアプリ画面 -->
+        <div id="main-app" class="hidden">
+            <div class="content-area">
+                
+                <!-- カレンダータブ -->
+                <div id="tab-calendar" class="tab-pane tab-content">
+                    <h2 class="pane-title">カレンダー</h2>
+                    <div class="calendar-box">
+                        <div class="input-group">
+                            <label>日付</label>
+                            <input type="date" id="cal-date">
+                        </div>
+                        <div class="input-group">
+                            <label>予定内容</label>
+                            <input type="text" id="cal-text" placeholder="例: ミーティング">
+                        </div>
+                        <button class="btn-primary" onclick="addCalendarEvent()">予定を追加</button>
+                    </div>
+                    <div class="event-list" id="calendar-event-list"></div>
+                </div>
+
+                <!-- トークタブ -->
+                <div id="tab-talk" class="tab-pane tab-content active">
+                    <div class="talk-container">
+                        <div class="talk-top-bar">
+                            <div class="talk-search-row">
+                                <input type="text" id="talk-search-input" placeholder="友達やメッセージを検索..." oninput="filterTalkList()">
+                                <button class="add-btn" onclick="openAddMenuModal()">追加 +</button>
+                            </div>
+                            <div class="talk-headers">
+                                <div class="talk-header-tab active" onclick="switchTalkHeader('requests')">未承認</div>
+                                <div class="talk-header-tab" onclick="switchTalkHeader('friends')">友達</div>
+                                <div class="talk-header-tab" onclick="switchTalkHeader('groups')">グループ</div>
+                            </div>
+                        </div>
+                        <div class="talk-list-area" id="talk-list-container">
+                            <!-- 動的挿入 -->
+                        </div>
+                    </div>
+                    <!-- 個別チャットルームビュー (モーダル・オーバーレイ) -->
+                    <div id="chat-room-view" class="chat-room-view hidden">
+                        <div class="chat-room-header">
+                            <button class="btn-secondary" onclick="closeChatRoom()" style="padding: 6px 10px;">← 戻る</button>
+                            <h3 id="chat-room-title">チャット</h3>
+                        </div>
+                        <div class="chat-messages" id="chat-messages-container"></div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chat-msg-input" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                            <button class="btn-primary" style="width: auto;" onclick="sendChatMessage()">送信</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- メインタブ (ダッシュボード & プロフィール) -->
+                <div id="tab-main" class="tab-pane tab-content">
+                    <h2 class="pane-title">メインダッシュボード</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h4>友達数</h4>
+                            <div class="value" id="dash-friends-count">0</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <h4>タスク完了数</h4>
+                            <div class="value" id="dash-tasks-count">0</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 10px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <h3 style="font-size: 15px; font-weight: 700;">プロフィール編集 & 設定</h3>
+                        <div class="input-group">
+                            <label>ID (変更不可)</label>
+                            <input type="text" id="profile-id" disabled style="background: var(--bg-color);">
+                        </div>
+                        <div class="input-group">
+                            <label>表示名</label>
+                            <input type="text" id="profile-name">
+                        </div>
+                        <div class="input-group">
+                            <label>新しいパスワード (変更する場合のみ)</label>
+                            <input type="password" id="profile-pass" placeholder="未入力ならそのまま">
+                        </div>
+                        <button class="btn-primary" onclick="updateProfile()">プロフィールを更新</button>
+                        <button class="btn-secondary" onclick="logout()" style="color: var(--danger-color); border-color: var(--danger-color); margin-top: 8px;">ログアウト</button>
+                    </div>
+                </div>
+
+                <!-- 掲示板タブ -->
+                <div id="tab-bulletin" class="tab-pane tab-content">
+                    <h2 class="pane-title">掲示板</h2>
+                    <div class="post-card">
+                        <div class="input-group">
+                            <label>投稿内容</label>
+                            <textarea id="bulletin-text" rows="3" placeholder="みんなに共有したいことを書こう..."></textarea>
+                        </div>
+                        <button class="btn-primary" onclick="createBulletinPost()">投稿する</button>
+                    </div>
+                    <div id="bulletin-posts-container" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+
+                <!-- FOCUSタブ -->
+                <div id="tab-focus" class="tab-pane tab-content">
+                    <h2 class="pane-title">FOCUS</h2>
+                    <div class="focus-timer-box">
+                        <div class="timer-display" id="focus-timer-display">25:00</div>
+                        <div class="timer-btns">
+                            <button class="btn-primary" id="timer-start-btn" onclick="toggleTimer()" style="width: auto; padding: 8px 20px;">スタート</button>
+                            <button class="btn-secondary" onclick="resetTimer()" style="width: auto;">リセット</button>
+                        </div>
+                    </div>
+                    <div class="task-input-row">
+                        <input type="text" id="focus-task-input" placeholder="新しい集中タスク..." onkeypress="if(event.key==='Enter')addFocusTask()">
+                        <button class="btn-primary" style="width: auto;" onclick="addFocusTask()">追加</button>
+                    </div>
+                    <div class="task-list" id="focus-task-list"></div>
+                </div>
+
+            </div>
+
+            <!-- 下部5タブバー -->
+            <nav class="bottom-nav">
+                <button class="nav-item" onclick="switchTab('calendar')" id="nav-calendar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Calendar
+                </button>
+                <button class="nav-item active" onclick="switchTab('talk')" id="nav-talk">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Talk
+                </button>
+                <button class="nav-item" onclick="switchTab('main')" id="nav-main">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Main
+                </button>
+                <button class="nav-item" onclick="switchTab('bulletin')" id="nav-bulletin">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Bulletin
+                </button>
+                <button class="nav-item" onclick="switchTab('focus')" id="nav-focus">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    FOCUS
+                </button>
+            </nav>
+        </div>
+
+        <!-- モーダル：追加メニュー選択 -->
+        <div id="modal-add-menu" class="modal hidden">
+            <div class="modal-card">
+                <h3>追加の選択</h3>
+                <p style="font-size: 13px; color: var(--text-secondary);">何を追加しますか？</p>
+                <div class="modal-buttons" style="flex-direction: column;">
+                    <button class="btn-primary" onclick="openFriendRequestModal()">友達を追加する</button>
+                    <button class="btn-secondary" onclick="openGroupCreateModal()">グループを作成する</button>
+                    <button class="btn-secondary" onclick="closeAllModals()" style="border:none;">キャンセル</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- モーダル：友達追加（IDと合言葉） -->
+        <div id="modal-friend-req" class="modal hidden">
+            <div class="modal-card">
+                <h3>友達追加リクエスト</h3>
+                <div class="input-group">
+                    <label>相手のID</label>
+                    <input type="text" id="req-target-id" placeholder="相手のID">
+                </div>
+                <div class="input-group">
+                    <label>合言葉</label>
+                    <input type="text" id="req-keyword" placeholder="設定する合言葉">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-primary" onclick="sendFriendRequest()">リクエスト送信</button>
+                    <button class="btn-secondary" onclick="closeAllModals()">キャンセル</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- モーダル：グループ作成 -->
+        <div id="modal-group-create" class="modal hidden">
+            <div class="modal-card">
+                <h3>グループ作成</h3>
+                <div class="input-group">
+                    <label>グループ名</label>
+                    <input type="text" id="group-name-input" placeholder="グループ名">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-primary" onclick="createGroup()">作成</button>
+                    <button class="btn-secondary" onclick="closeAllModals()">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- アプリ全体の状態管理 ---
+        let db = {
+            users: JSON.parse(localStorage.getItem('app_users')) || [],
+            currentUser: JSON.parse(localStorage.getItem('app_current_user')) || null,
+            friendRequests: JSON.parse(localStorage.getItem('app_friend_requests')) || [], // {from, to, keyword, status: 'pending'/'accepted'}
+            friends: JSON.parse(localStorage.getItem('app_friends')) || [], // {user1, user2}
+            groups: JSON.parse(localStorage.getItem('app_groups')) || [], // {id, name, members: []}
+            messages: JSON.parse(localStorage.getItem('app_messages')) || [], // {id, sender, receiver/groupId, text, type: 'private'/'group', timestamp}
+            calendar: JSON.parse(localStorage.getItem('app_calendar')) || [], // {user, date, text}
+            bulletin: JSON.parse(localStorage.getItem('app_bulletin')) || [], // {id, author, text, timestamp}
+            tasks: JSON.parse(localStorage.getItem('app_tasks')) || [] // {user, id, text, completed}
+        };
+
+        function saveData() {
+            localStorage.setItem('app_users', JSON.stringify(db.users));
+            localStorage.setItem('app_current_user', JSON.stringify(db.currentUser));
+            localStorage.setItem('app_friend_requests', JSON.stringify(db.friendRequests));
+            localStorage.setItem('app_friends', JSON.stringify(db.friends));
+            localStorage.setItem('app_groups', JSON.stringify(db.groups));
+            localStorage.setItem('app_messages', JSON.stringify(db.messages));
+            localStorage.setItem('app_calendar', JSON.stringify(db.calendar));
+            localStorage.setItem('app_bulletin', JSON.stringify(db.bulletin));
+            localStorage.setItem('app_tasks', JSON.stringify(db.tasks));
+        }
+
+        // --- 認証まわり ---
+        let isSignupMode = false;
+
+        function toggleAuthMode() {
+            isSignupMode = !isSignupMode;
+            document.getElementById('auth-title').innerText = isSignupMode ? '新規アカウント登録' : 'ログイン';
+            document.getElementById('auth-subtitle').innerText = isSignupMode ? '必要事項を入力してアカウントを作成します' : 'アカウント情報を入力してください';
+            document.getElementById('auth-submit-btn').innerText = isSignupMode ? '登録してログイン' : 'ログイン';
+            document.getElementById('auth-switch-text').innerText = isSignupMode ? 'すでにアカウントをお持ちの方はこちら' : 'アカウントをお持ちでない方は新規登録';
+            document.getElementById('signup-extra-group').classList.toggle('hidden', !isSignupMode);
+            document.getElementById('remember-group').classList.toggle('hidden', isSignupMode);
+            document.getElementById('auth-error').innerText = '';
+        }
+
+        function handleAuthSubmit() {
+            const id = document.getElementById('auth-id').value.trim();
+            const pass = document.getElementById('auth-pass').value.trim();
+            const name = document.getElementById('auth-name').value.trim();
+            const remember = document.getElementById('auth-remember').checked;
+            const errEl = document.getElementById('auth-error');
+
+            if (!id || !pass) {
+                errEl.innerText = 'IDとパスワードを入力してください';
+                return;
+            }
+
+            if (isSignupMode) {
+                if (!name) {
+                    errEl.innerText = '表示名を入力してください';
+                    return;
+                }
+                const exists = db.users.find(u => u.id === id);
+                if (exists) {
+                    errEl.innerText = 'すでに使用されているIDです';
+                    return;
+                }
+                const newUser = { id, pass, name };
+                db.users.push(newUser);
+                db.currentUser = newUser;
+                saveData();
+                initApp();
+            } else {
+                const user = db.users.find(u => u.id === id && u.pass === pass);
+                if (!user) {
+                    errEl.innerText = 'IDまたはパスワードが間違っています';
+                    return;
+                }
+                db.currentUser = user;
+                if (remember) {
+                    localStorage.setItem('app_remember_user', JSON.stringify(user));
+                } else {
+                    localStorage.removeItem('app_remember_user');
+                }
+                saveData();
+                initApp();
+            }
+        }
+
+        // 自動ログインチェック
+        window.addEventListener('DOMContentLoaded', () => {
+            const remembered = localStorage.getItem('app_remember_user');
+            if (remembered) {
+                db.currentUser = JSON.parse(remembered);
+                initApp();
+            }
+        });
+
+        function logout() {
+            db.currentUser = null;
+            localStorage.removeItem('app_remember_user');
+            saveData();
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+        }
+
+        function initApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // プロフィール設定の初期値
+            document.getElementById('profile-id').value = db.currentUser.id;
+            document.getElementById('profile-name').value = db.currentUser.name;
+
+            switchTab('talk');
+            renderTalkList();
+            renderCalendar();
+            renderBulletin();
+            renderFocusTasks();
+            updateDashboard();
+        }
+
+        // --- タブ切り替えシステム (開いているタブを大きくする) ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+        }
+
+        // --- トーク画面・機能 ---
+        let currentTalkTab = 'requests'; // requests, friends, groups
+
+        function switchTalkHeader(headerType) {
+            currentTalkTab = headerType;
+            document.querySelectorAll('.talk-header-tab').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTalkList();
+        }
+
+        function renderTalkList() {
+            const container = document.getElementById('talk-list-container');
+            container.innerHTML = '';
+            const myId = db.currentUser.id;
+            const query = document.getElementById('talk-search-input').value.toLowerCase();
+
+            if (currentTalkTab === 'requests') {
+                // 自分宛ての未承認リクエスト
+                const reqs = db.friendRequests.filter(r => r.to === myId && r.status === 'pending');
+                if (reqs.length === 0) {
+                    container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">未承認のリクエストはありません</div>`;
+                    return;
+                }
+                reqs.forEach(r => {
+                    const senderUser = db.users.find(u => u.id === r.from);
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `
+                        <div class="list-item-info">
+                            <h4>${senderUser ? senderUser.name : r.from} (ID: ${r.from})</h4>
+                            <p>合言葉: ${r.keyword}</p>
+                        </div>
+                        <div class="list-item-action">
+                            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="acceptFriendRequest('${r.from}', '${r.keyword}')">承認</button>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } else if (currentTalkTab === 'friends') {
+                // 友達リスト
+                const myFriendIds = db.friends
+                    .filter(f => f.user1 === myId || f.user2 === myId)
+                    .map(f => f.user1 === myId ? f.user2 : f.user1);
+                
+                const friendUsers = db.users.filter(u => myFriendIds.includes(u.id) && u.id.toLowerCase().includes(query));
+
+                if (friendUsers.length === 0) {
+                    container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">友達がいません。「追加 +」から追加しましょう</div>`;
+                    return;
+                }
+
+                friendUsers.forEach(f => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.onclick = () => openChatRoom('private', f.id, f.name);
+                    item.innerHTML = `
+                        <div class="list-item-info">
+                            <h4>${f.name}</h4>
+                            <p>ID: ${f.id}</p>
+                        </div>
+                        <div class="list-item-action">
+                            <span style="font-size: 12px; color: var(--accent-color);">チャット ➔</span>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } else if (currentTalkTab === 'groups') {
+                // グループリスト
+                const myGroups = db.groups.filter(g => g.members.includes(myId) && g.name.toLowerCase().includes(query));
+                if (myGroups.length === 0) {
+                    container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">参加しているグループはありません</div>`;
+                    return;
+                }
+
+                myGroups.forEach(g => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.onclick = () => openChatRoom('group', g.id, g.name);
+                    item.innerHTML = `
+                        <div class="list-item-info">
+                            <h4>${g.name}</h4>
+                            <p>メンバー: ${g.members.length}人</p>
+                        </div>
+                        <div class="list-item-action">
+                            <span style="font-size: 12px; color: var(--accent-color);">開く ➔</span>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+        }
+
+        function filterTalkList() {
+            renderTalkList();
+        }
+
+        // --- 追加モーダル操作 ---
+        function openAddMenuModal() { document.getElementById('modal-add-menu').classList.remove('hidden'); }
+        function openFriendRequestModal() {
+            closeAllModals();
+            document.getElementById('modal-friend-req').classList.remove('hidden');
+        }
+        function openGroupCreateModal() {
+            closeAllModals();
+            document.getElementById('modal-group-create').classList.remove('hidden');
+        }
+        function closeAllModals() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+        }
+
+        function sendFriendRequest() {
+            const targetId = document.getElementById('req-target-id').value.trim();
+            const keyword = document.getElementById('req-keyword').value.trim();
+            const myId = db.currentUser.id;
+
+            if (!targetId || !keyword) {
+                alert('すべての項目を入力してください');
+                return;
+            }
+            if (targetId === myId) {
+                alert('自分自身を追加することはできません');
+                return;
+            }
+            const targetUser = db.users.find(u => u.id === targetId);
+            if (!targetUser) {
+                alert('指定されたIDのユーザーは存在しません');
+                return;
+            }
+
+            // 既に友達かチェック
+            const alreadyFriend = db.friends.find(f => (f.user1 === myId && f.user2 === targetId) || (f.user1 === targetId && f.user2 === myId));
+            if (alreadyFriend) {
+                alert('すでに友達登録されています');
+                return;
+            }
+
+            db.friendRequests.push({ from: myId, to: targetId, keyword, status: 'pending' });
+            saveData();
+            closeAllModals();
+            alert('友達リクエストを送信しました');
+            document.getElementById('req-target-id').value = '';
+            document.getElementById('req-keyword').value = '';
+        }
+
+        function acceptFriendRequest(fromId, keyword) {
+            const myId = db.currentUser.id;
+            const req = db.friendRequests.find(r => r.from === fromId && r.to === myId && r.status === 'pending');
+            if (req) {
+                req.status = 'accepted';
+                db.friends.push({ user1: fromId, user2: myId });
+                saveData();
+                renderTalkList();
+                updateDashboard();
+                alert('友達リクエストを承認しました！');
+            }
+        }
+
+        function createGroup() {
+            const name = document.getElementById('group-name-input').value.trim();
+            if (!name) {
+                alert('グループ名を入力してください');
+                return;
+            }
+            const newGroup = {
+                id: 'grp_' + Date.now(),
+                name,
+                members: [db.currentUser.id]
+            };
+            db.groups.push(newGroup);
+            saveData();
+            closeAllModals();
+            document.getElementById('group-name-input').value = '';
+            renderTalkList();
+            alert('グループを作成しました');
+        }
+
+        // --- チャット機能 ---
+        let currentChatType = null; // 'private' or 'group'
+        let currentChatTargetId = null;
+
+        function openChatRoom(type, targetId, targetName) {
+            currentChatType = type;
+            currentChatTargetId = targetId;
+            document.getElementById('chat-room-title').innerText = targetName;
+            document.getElementById('chat-room-view').classList.remove('hidden');
+            renderChatMessages();
+        }
+
+        function closeChatRoom() {
+            document.getElementById('chat-room-view').classList.add('hidden');
+            currentChatType = null;
+            currentChatTargetId = null;
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages-container');
+            container.innerHTML = '';
+            const myId = db.currentUser.id;
+
+            let msgs = [];
+            if (currentChatType === 'private') {
+                msgs = db.messages.filter(m => 
+                    m.type === 'private' && 
+                    ((m.sender === myId && m.receiver === currentChatTargetId) || (m.sender === currentChatTargetId && m.receiver === myId))
+                );
+            } else if (currentChatType === 'group') {
+                msgs = db.messages.filter(m => m.type === 'group' && m.groupId === currentChatTargetId);
+            }
+
+            msgs.forEach(m => {
+                const bubble = document.createElement('div');
+                const isMy = m.sender === myId;
+                bubble.className = `message-bubble ${isMy ? 'my' : 'other'}`;
+                
+                let content = m.text;
+                if (!isMy && currentChatType === 'group') {
+                    const senderUser = db.users.find(u => u.id === m.sender);
+                    content = `<div style="font-size: 10px; font-weight: 600; color: var(--text-secondary); margin-bottom: 2px;">${senderUser ? senderUser.name : m.sender}</div>` + content;
+                }
+                bubble.innerHTML = content;
+                container.appendChild(bubble);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const msg = {
+                id: 'msg_' + Date.now(),
+                sender: db.currentUser.id,
+                text,
+                type: currentChatType,
+                timestamp: Date.now()
+            };
+
+            if (currentChatType === 'private') {
+                msg.receiver = currentChatTargetId;
+            } else {
+                msg.groupId = currentChatTargetId;
+            }
+
+            db.messages.push(msg);
+            saveData();
+            input.value = '';
+            renderChatMessages();
+        }
+
+        // --- カレンダー機能 ---
+        function addCalendarEvent() {
+            const date = document.getElementById('cal-date').value;
+            const text = document.getElementById('cal-text').value.trim();
+            if (!date || !text) {
+                alert('日付と予定内容を入力してください');
+                return;
+            }
+            db.calendar.push({ user: db.currentUser.id, date, text });
+            saveData();
+            document.getElementById('cal-date').value = '';
+            document.getElementById('cal-text').value = '';
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const list = document.getElementById('calendar-event-list');
+            list.innerHTML = '';
+            const myEvents = db.calendar.filter(e => e.user === db.currentUser.id);
+            if (myEvents.length === 0) {
+                list.innerHTML = `<div style="font-size: 13px; color: var(--text-secondary); text-align: center;">予定はありません</div>`;
+                return;
+            }
+            myEvents.sort((a,b) => new Date(a.date) - new Date(b.date));
+            myEvents.forEach(e => {
+                const item = document.createElement('div');
+                item.className = 'event-item';
+                item.innerHTML = `<span><strong>${e.date}</strong>: ${e.text}</span>`;
+                list.appendChild(item);
+            });
+        }
+
+        // --- メインタブ & プロフィール ---
+        function updateDashboard() {
+            const myId = db.currentUser.id;
+            const friendCount = db.friends.filter(f => f.user1 === myId || f.user2 === myId).length;
+            const taskCount = db.tasks.filter(t => t.user === myId && t.completed).length;
+
+            document.getElementById('dash-friends-count').innerText = friendCount;
+            document.getElementById('dash-tasks-count').innerText = taskCount;
+        }
+
+        function updateProfile() {
+            const name = document.getElementById('profile-name').value.trim();
+            const pass = document.getElementById('profile-pass').value.trim();
+
+            if (!name) {
+                alert('表示名を入力してください');
+                return;
+            }
+
+            db.currentUser.name = name;
+            if (pass) {
+                db.currentUser.pass = pass;
+            }
+
+            // users配列側も更新
+            const userInDb = db.users.find(u => u.id === db.currentUser.id);
+            if (userInDb) {
+                userInDb.name = name;
+                if (pass) userInDb.pass = pass;
+            }
+
+            saveData();
+            alert('プロフィールを更新しました');
+        }
+
+        // --- 掲示板機能 ---
+        function createBulletinPost() {
+            const text = document.getElementById('bulletin-text').value.trim();
+            if (!text) return;
+
+            db.bulletin.unshift({
+                id: 'post_' + Date.now(),
+                author: db.currentUser.name,
+                text,
+                timestamp: new Date().toLocaleString()
+            });
+            saveData();
+            document.getElementById('bulletin-text').value = '';
+            renderBulletin();
+        }
+
+        function renderBulletin() {
+            const container = document.getElementById('bulletin-posts-container');
+            container.innerHTML = '';
+            if (db.bulletin.length === 0) {
+                container.innerHTML = `<div style="font-size: 13px; color: var(--text-secondary); text-align: center;">投稿はまだありません</div>`;
+                return;
+            }
+            db.bulletin.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.innerHTML = `
+                    <div class="post-header">
+                        <span><strong>${p.author}</strong></span>
+                        <span>${p.timestamp}</span>
+                    </div>
+                    <div style="font-size: 14px; line-height: 1.4; white-space: pre-wrap;">${p.text}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- FOCUS機能 (集中タイマー & タスク) ---
+        let timerInterval = null;
+        let timerSeconds = 25 * 60;
+        let isTimerRunning = false;
+
+        function updateTimerDisplay() {
+            const min = Math.floor(timerSeconds / 60);
+            const sec = timerSeconds % 60;
+            document.getElementById('focus-timer-display').innerText = 
+                `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-start-btn');
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btn.innerText = 'スタート';
+            } else {
+                isTimerRunning = true;
+                btn.innerText = '一時停止';
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        btn.innerText = 'スタート';
+                        alert('お疲れ様でした！集中セッション終了です。');
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerSeconds = 25 * 60;
+            updateTimerDisplay();
+            document.getElementById('timer-start-btn').innerText = 'スタート';
+        }
+
+        function addFocusTask() {
+            const input = document.getElementById('focus-task-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            db.tasks.push({
+                id: 'task_' + Date.now(),
+                user: db.currentUser.id,
+                text,
+                completed: false
+            });
+            saveData();
+            input.value = '';
+            renderFocusTasks();
+            updateDashboard();
+        }
+
+        function toggleTaskComplete(taskId) {
+            const task = db.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                saveData();
+                renderFocusTasks();
+                updateDashboard();
+            }
+        }
+
+        function renderFocusTasks() {
+            const list = document.getElementById('focus-task-list');
+            list.innerHTML = '';
+            const myTasks = db.tasks.filter(t => t.user === db.currentUser.id);
+            if (myTasks.length === 0) {
+                list.innerHTML = `<div style="font-size: 13px; color: var(--text-secondary); text-align: center;">タスクはありません</div>`;
+                return;
+            }
+            myTasks.forEach(t => {
+                const item = document.createElement('div');
+                item.className = `task-item ${t.completed ? 'completed' : ''}`;
+                item.innerHTML = `
+                    <span>${t.text}</span>
+                    <button class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="toggleTaskComplete('${t.id}')">${t.completed ? '未完了にする' : '完了'}</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
