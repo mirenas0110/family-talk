@@ -456,6 +456,11 @@
       border-radius: 4px;
       color: var(--text-muted);
       font-weight: 600;
+      cursor: pointer;
+    }
+    .tag-badge:hover {
+      background: var(--border-color);
+      color: var(--text-main);
     }
 
     /* ================= MY PAGE MODULE ================= */
@@ -618,7 +623,7 @@
         <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openSettingsModal()">⚙️</button>
       </div>
       <div class="mypage-container">
-        <!-- プロフィール概要カード（閲覧用） -->
+        <!-- プロフィール概要カード -->
         <div class="profile-card">
           <div class="avatar-wrapper" id="display-avatar-wrapper" style="width: 50px; height: 50px; flex-shrink: 0;">
             <span id="display-avatar-initial">ゲ</span>
@@ -683,11 +688,14 @@
     <!-- 4. BOARD MODULE -->
     <div id="tab-board" class="content">
       <div class="header">
-        <h1>BOARD</h1>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h1 id="board-header-title">BOARD</h1>
+          <button id="board-clear-filter-btn" class="tag-badge" style="display:none;" onclick="clearBoardTagFilter()">✕ 絞り込み解除</button>
+        </div>
         <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openBoardPostModal()">＋</button>
       </div>
       <div class="board-container" id="board-container">
-        <!-- 掲示板 / 日記アイテムが動きます -->
+        <!-- 掲示板アイテムが動きます -->
       </div>
     </div>
 
@@ -809,7 +817,7 @@
       <div style="font-size: 12px; color:var(--text-muted);">公開範囲</div>
       <select id="board-visibility-select" class="search-box" style="margin:0;">
         <option value="private">自分用（非公開）</option>
-        <option value="family">家族共有</option>
+        <option value="family">全体公開</option>
       </select>
 
       <div style="display:flex; gap:8px; margin-top:8px;">
@@ -903,6 +911,7 @@
     let boardPosts = JSON.parse(localStorage.getItem('family_board_posts')) || [
       { id: 1, text: '今日は集中して課題を片付けられた。明日もこの調子で頑張る。', tag: '日記', visibility: 'private', time: '2026/10/15 21:00', author: 'ゲストユーザー' }
     ];
+    let boardTagFilter = null; // タグごとの絞り込み状態
 
     // 初期UI・ログイン状態適用
     applyBaseColor(mySettings.baseColor || 'default');
@@ -1472,7 +1481,7 @@
           item.className = 'board-card';
           item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span class="tag-badge"># ${rec.tag}</span>
+              <span class="tag-badge" onclick="filterBoardByTag('${rec.tag}')"># ${rec.tag}</span>
               <span style="font-size:11px; color:var(--text-muted);">${rec.date}</span>
             </div>
             <div style="font-size:16px; font-weight:600; margin-top:4px;">${rec.minutes} 分の集中</div>
@@ -1492,28 +1501,54 @@
       const container = document.getElementById('board-container');
       container.innerHTML = '';
 
-      if (boardPosts.length === 0) {
+      const clearBtn = document.getElementById('board-clear-filter-btn');
+      const titleElem = document.getElementById('board-header-title');
+
+      let filtered = boardPosts;
+      if (boardTagFilter) {
+        filtered = boardPosts.filter(p => p.tag === boardTagFilter && (p.author === mySettings.name || p.visibility === 'family'));
+        titleElem.innerText = `BOARD (#${boardTagFilter})`;
+        clearBtn.style.display = 'inline-block';
+      } else {
+        titleElem.innerText = 'BOARD';
+        clearBtn.style.display = 'none';
+      }
+
+      if (filtered.length === 0) {
         container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">投稿はありません</div>';
         return;
       }
 
-      boardPosts.forEach(post => {
+      filtered.forEach(post => {
         const item = document.createElement('div');
         item.className = 'board-card';
-        const isPrivate = post.visibility === 'private';
         
+        let visibilityLabel = '全体公開';
+        if (post.visibility === 'private') visibilityLabel = '🔒 自分用';
+        else if (post.visibility !== 'family') visibilityLabel = `👥 ${post.visibility}`;
+
         item.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; gap:6px; align-items:center;">
-              <span class="tag-badge"># ${post.tag || 'メモ'}</span>
-              <span style="font-size:10px; padding:2px 6px; background:${isPrivate ? '#f0ede6' : '#e2ded5'}; border-radius:3px; color:var(--text-muted);">${isPrivate ? '🔒 自分用' : '👥 家族共有'}</span>
+              <span class="tag-badge" onclick="filterBoardByTag('${post.tag}')"># ${post.tag || 'メモ'}</span>
+              <span style="font-size:10px; padding:2px 6px; background:#e2ded5; border-radius:3px; color:var(--text-muted);">${visibilityLabel}</span>
             </div>
-            <span style="font-size:11px; color:var(--text-muted);">${post.time}</span>
+            <span style="font-size:11px; color:var(--text-muted);">${post.time} (${post.author})</span>
           </div>
           <div style="font-size:14px; white-space:pre-wrap; margin-top:4px;">${post.text}</div>
         `;
         container.appendChild(item);
       });
+    }
+
+    function filterBoardByTag(tag) {
+      boardTagFilter = tag;
+      renderBoardPosts();
+    }
+
+    function clearBoardTagFilter() {
+      boardTagFilter = null;
+      renderBoardPosts();
     }
 
     function openBoardPostModal() {
@@ -1526,6 +1561,18 @@
         opt.value = tag;
         opt.innerText = tag;
         select.appendChild(opt);
+      });
+
+      const visSelect = document.getElementById('board-visibility-select');
+      visSelect.innerHTML = `
+        <option value="private">自分用（非公開）</option>
+        <option value="family">全体公開</option>
+      `;
+      groups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.name;
+        opt.innerText = `グループ: ${g.name}`;
+        visSelect.appendChild(opt);
       });
 
       document.getElementById('board-post-modal').style.display = 'flex';
