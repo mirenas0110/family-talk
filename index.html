@@ -9,190 +9,105 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
-    /* ==========================================
-       GREIGE & SOFT MINIMAL DESIGN
-       (Soft rounded corners, no emojis, clean layout)
-       ========================================== */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* マイページ・プロフィール表示 */
+    .profile-card {
+      background: #ffffff;
+      border: 1px solid #e5e1d8;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
     }
 
-    body {
-      background-color: #efede9; /* やわらかいグレージュ背景 */
+    .avatar-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #8c857b;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0 auto 12px;
+      overflow: hidden;
+    }
+
+    .avatar-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-name {
+      font-size: 15px;
+      font-weight: 600;
       color: #383634;
-      margin: 0;
-      padding: 0;
+      margin-bottom: 4px;
+    }
+
+    .profile-bio {
+      font-size: 12px;
+      color: #7c766e;
+      line-height: 1.4;
+      margin-bottom: 16px;
+      min-height: 18px;
+    }
+
+    /* モーダル */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
+      background: rgba(0, 0, 0, 0.3);
       display: flex;
       justify-content: center;
       align-items: center;
+      z-index: 100;
     }
 
-    .hidden {
-      display: none !important;
-    }
-
-    /* ログインエリア */
-    .login-box {
+    .modal-content {
       background: #fcfbf9;
       width: 90%;
-      max-width: 340px;
-      padding: 36px 24px;
+      max-width: 360px;
+      border-radius: 8px;
+      padding: 24px;
       border: 1px solid #dcd8d0;
-      border-radius: 8px; /* ほんのり丸み */
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
     }
 
-    .login-box h2 {
+    .modal-title {
       font-size: 13px;
-      letter-spacing: 2px;
-      margin-bottom: 24px;
-      color: #4a4744;
-      text-align: center;
-      font-weight: 600;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 11px 12px;
-      margin-bottom: 12px;
-      border: 1px solid #dcd8d0;
-      border-radius: 6px; /* 少し丸み */
-      background: #f7f6f3;
-      color: #383634;
-      font-size: 12px;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: #8c857b;
-      background: #ffffff;
-    }
-
-    button {
-      width: 100%;
-      padding: 11px 16px;
-      border: 1px solid #5a554e;
-      border-radius: 6px; /* 少し丸み */
-      font-size: 11px;
       letter-spacing: 1px;
-      cursor: pointer;
-      background: #5a554e;
-      color: #ffffff;
       font-weight: 600;
-      transition: all 0.15s;
-    }
-
-    button:hover {
-      background: #46423c;
-      border-color: #46423c;
-    }
-
-    button.sec {
-      background: transparent;
-      color: #6e6860;
-      border: 1px solid #cca49e00;
-      border: 1px solid #d0cbcf;
-      margin-top: 8px;
-    }
-
-    button.sec:hover {
-      border-color: #8c857b;
+      margin-bottom: 16px;
       color: #383634;
-      background: #f7f6f3;
     }
 
-    /* アプリメイン枠 */
-    .app-container {
-      background: #fcfbf9;
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
+    .form-group {
+      margin-bottom: 12px;
+      text-align: left;
     }
 
-    /* タブコンテンツ */
-    .tab-content {
-      display: none;
-      flex: 1;
-      padding: 24px 20px;
-      overflow-y: auto;
-      padding-bottom: 70px;
-    }
-
-    .tab-content.active {
+    .form-group label {
       display: block;
-    }
-
-    .title {
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: #8c857b;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-
-    /* 下部ナビゲーション */
-    .bottom-nav {
-      height: 52px;
-      background: #f7f6f3;
-      border-top: 1px solid #e5e1d8;
-      display: flex;
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-    }
-
-    .nav-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      color: #8c857b;
       font-size: 10px;
       letter-spacing: 1px;
-      cursor: pointer;
-      height: 100%;
-      transition: all 0.15s;
+      color: #8c857b;
+      margin-bottom: 4px;
+      font-weight: 600;
     }
 
-    .nav-btn.active {
-      color: #383634;
-      font-weight: bold;
-      background: #efede9;
-      border-top: 2px solid #5a554e;
+    .msg-sender {
+      font-size: 10px;
+      color: #8c857b;
+      margin-bottom: 2px;
+      font-weight: 600;
     }
-
-    /* チャットエリア */
-    .chat-box {
-      border: 1px solid #e5e1d8;
-      border-radius: 6px;
-      padding: 14px;
-      height: 280px;
-      overflow-y: auto;
-      margin-bottom: 12px;
-      background: #f7f6f3;
-    }
-
-    .msg {
-      margin-bottom: 10px;
-      font-size: 12px;
-      color: #383634;
-      line-height: 1.5;
-      padding: 8px 12px;
-      background: #ffffff;
-      border: 1px solid #e0dcd4;
-      border-radius: 6px;
-      display: inline-block;
-      max-width: 80%;
-    }
-  </style>
+    </style>
 </head>
 <body>
 
@@ -222,11 +137,20 @@
       </div>
     </div>
 
-    <div id="tab3" class="tab-content">
-      <div class="title">SETTING</div>
-      <button onclick="location.reload()" class="sec">LOG OUT</button>
-    </div>
 
+     <!-- マイページ（SETTING） -->
+    <div id="tab3" class="tab-content">
+      <div class="title">MY PAGE</div>
+      
+      <div class="profile-card">
+        <div id="dispAvatar" class="avatar-circle">U</div>
+        <div id="dispName" class="profile-name">User</div>
+        <div id="dispBio" class="profile-bio">ひとことを設定していません</div>
+        <button onclick="openEditModal()" class="sec" style="margin-top: 0;">ACCOUNT EDIT</button>
+      </div>
+
+      <button onclick="location.reload()" class="sec" style="color:#a84c4c; border-color:#e2c5c5;">LOG OUT</button>
+    </div>
     <div id="tab4" class="tab-content">
       <div class="title">BOARD</div>
       <p style="font-size:12px; color:#666;">No board posts.</p>
@@ -241,13 +165,29 @@
     <nav class="bottom-nav">
       <button class="nav-btn active" onclick="setTab(1)">CALENDAR</button>
       <button class="nav-btn" onclick="setTab(2)">TALK</button>
-      <button class="nav-btn" onclick="setTab(3)">SETTING</button>
+      <button class="nav-btn" onclick="setTab(3)">MY PAGE</button>
       <button class="nav-btn" onclick="setTab(4)">BOARD</button>
       <button class="nav-btn" onclick="setTab(5)">EXTRA</button>
     </nav>
   </div>
 
   <script>
+    // ユーザー情報の初期状態
+    let userProfile = {
+      name: "User",
+      bio: "ひとことを設定していません",
+      avatar: ""
+    };
+
+    // 起動時に保存されたプロフィールを読み込む
+    window.onload = function() {
+      const saved = localStorage.getItem("familyApp_profile");
+      if (saved) {
+        userProfile = JSON.parse(saved);
+      }
+      updateProfileUI();
+    };
+
     function login() {
       document.getElementById("loginArea").classList.add("hidden");
       document.getElementById("mainArea").classList.remove("hidden");
@@ -274,19 +214,98 @@
       });
     }
 
+    // プロフィール表示を更新
+    function updateProfileUI() {
+      document.getElementById("dispName").innerText = userProfile.name || "User";
+      document.getElementById("dispBio").innerText = userProfile.bio || "ひとことを設定していません";
+      
+      const avatarEl = document.getElementById("dispAvatar");
+      if (userProfile.avatar) {
+        avatarEl.innerHTML = `<img src="${userProfile.avatar}" alt="Avatar">`;
+      } else {
+        const initial = (userProfile.name || "U").charAt(0).toUpperCase();
+        avatarEl.innerText = initial;
+      }
+    }
+
+    // モーダルを開く
+    function openEditModal() {
+      document.getElementById("editName").value = userProfile.name || "";
+      document.getElementById("editBio").value = userProfile.bio || "";
+      document.getElementById("editAvatar").value = userProfile.avatar || "";
+      document.getElementById("editModal").classList.remove("hidden");
+    }
+
+    // モーダルを閉じる
+    function closeEditModal() {
+      document.getElementById("editModal").classList.add("hidden");
+    }
+
+    // プロフィール保存
+    function saveProfile() {
+      const name = document.getElementById("editName").value.trim();
+      const bio = document.getElementById("editBio").value.trim();
+      const avatar = document.getElementById("editAvatar").value.trim();
+
+      userProfile.name = name || "User";
+      userProfile.bio = bio || "ひとことを設定していません";
+      userProfile.avatar = avatar;
+
+      localStorage.setItem("familyApp_profile", JSON.stringify(userProfile));
+      updateProfileUI();
+      closeEditModal();
+    }
+
+    // メッセージ送信（名前付き）
     function sendMsg() {
       const input = document.getElementById("chatInput");
       const log = document.getElementById("chatLog");
       if (!input.value.trim()) return;
       
       const item = document.createElement("div");
-      item.className = "msg";
-      item.innerText = input.value;
+      item.style.marginBottom = "10px";
+
+      const sender = document.createElement("div");
+      sender.className = "msg-sender";
+      sender.innerText = userProfile.name;
+
+      const body = document.createElement("div");
+      body.className = "msg";
+      body.innerText = input.value;
+
+      item.appendChild(sender);
+      item.appendChild(body);
       log.appendChild(item);
       
       input.value = "";
       log.scrollTop = log.scrollHeight;
     }
   </script>
+ <!-- アカウント編集モーダル -->
+  <div id="editModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-title">EDIT PROFILE</div>
+      
+      <div class="form-group">
+        <label>NICKNAME</label>
+        <input type="text" id="editName" placeholder="表示名">
+      </div>
+
+      <div class="form-group">
+        <label>STATUS MESSAGE</label>
+        <input type="text" id="editBio" placeholder="一言メッセージ">
+      </div>
+
+      <div class="form-group">
+        <label>ICON IMAGE URL (OPTIONAL)</label>
+        <input type="text" id="editAvatar" placeholder="https://example.com/icon.jpg">
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        <button onclick="saveProfile()" style="flex:1;">SAVE</button>
+        <button onclick="closeEditModal()" class="sec" style="flex:1; margin-top:0;">CANCEL</button>
+      </div>
+    </div>
+  </div>  
 </body>
 </html>
