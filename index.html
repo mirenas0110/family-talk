@@ -13,16 +13,17 @@
       --text-main: #383634;
       --text-muted: #7c766e;
       --accent: #5a554e;
-      --accent-hover: #47433c;
       --bubble-me: #eae5dc;
       --bubble-other: #ffffff;
+      --dot-unread: #d9534f;
+      --dot-online: #5cb85c;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
@@ -46,7 +47,6 @@
       position: relative;
     }
 
-    /* 共通ヘッダー */
     .header {
       padding: 16px 20px;
       border-bottom: 1px solid var(--border-color);
@@ -54,17 +54,14 @@
       justify-content: space-between;
       align-items: center;
       background: var(--surface-color);
-      z-index: 10;
     }
 
     .header h1 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       letter-spacing: 1px;
-      color: var(--text-main);
     }
 
-    /* メインコンテンツエリア */
     .content {
       flex: 1;
       overflow-y: auto;
@@ -91,15 +88,16 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 11px;
-      letter-spacing: 1px;
+      font-size: 10px;
+      letter-spacing: 0.5px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 3px;
       transition: color 0.15s;
+      padding: 0 2px;
     }
 
     .nav-btn.active {
@@ -128,23 +126,84 @@
 
     .talk-tabs {
       display: flex;
-      gap: 8px;
+      gap: 6px;
+      overflow-x: auto;
     }
 
     .talk-tab {
-      padding: 6px 12px;
-      font-size: 12px;
+      padding: 5px 10px;
+      font-size: 11px;
       border: 1px solid var(--border-dark);
       background: var(--surface-color);
       border-radius: 4px;
       cursor: pointer;
       color: var(--text-muted);
+      white-space: nowrap;
     }
 
     .talk-tab.active {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
+    }
+
+    /* 友達リスト（縦並び） */
+    .friend-list-container {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .friend-item {
+      background: var(--surface-color);
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .friend-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* アイコン ＆ オンライン/未読ポチ */
+    .avatar-wrapper {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      background: var(--border-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .online-dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      background: var(--dot-online);
+      border: 2px solid var(--surface-color);
+      border-radius: 50%;
+    }
+
+    .unread-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--dot-unread);
+      border-radius: 50%;
     }
 
     .chat-messages {
@@ -160,19 +219,9 @@
       display: flex;
       flex-direction: column;
       max-width: 85%;
-      position: relative;
-      transition: transform 0.2s ease;
     }
-
-    .msg-wrapper.me {
-      align-self: flex-end;
-      align-items: flex-end;
-    }
-
-    .msg-wrapper.other {
-      align-self: flex-start;
-      align-items: flex-start;
-    }
+    .msg-wrapper.me { align-self: flex-end; align-items: flex-end; }
+    .msg-wrapper.other { align-self: flex-start; align-items: flex-start; }
 
     .msg-sender {
       font-size: 11px;
@@ -187,18 +236,10 @@
       line-height: 1.6;
       border-radius: 6px;
       border: 1px solid var(--border-color);
-      position: relative;
       word-break: break-all;
     }
-
-    .me .msg-bubble {
-      background: var(--bubble-me);
-      border-color: var(--border-dark);
-    }
-
-    .other .msg-bubble {
-      background: var(--bubble-other);
-    }
+    .me .msg-bubble { background: var(--bubble-me); border-color: var(--border-dark); }
+    .other .msg-bubble { background: var(--bubble-other); }
 
     .msg-meta {
       font-size: 10px;
@@ -206,16 +247,6 @@
       margin-top: 3px;
       display: flex;
       gap: 6px;
-    }
-
-    .reply-preview-bar {
-      padding: 8px 16px;
-      background: #eeeae2;
-      border-top: 1px solid var(--border-color);
-      font-size: 12px;
-      display: none;
-      justify-content: space-between;
-      align-items: center;
     }
 
     .chat-input-area {
@@ -255,11 +286,6 @@
       align-items: center;
       background: var(--surface-color);
       border-bottom: 1px solid var(--border-color);
-    }
-
-    .cal-title {
-      font-size: 15px;
-      font-weight: 600;
     }
 
     .icon-btn {
@@ -303,16 +329,7 @@
       gap: 4px;
     }
 
-    .cal-cell:hover {
-      background: #faf9f6;
-    }
-
-    .cal-date-num {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
+    .cal-date-num { font-size: 12px; font-weight: 600; }
     .cal-event-dot {
       font-size: 10px;
       padding: 2px 4px;
@@ -334,18 +351,18 @@
 
     /* ================= STUDY LOG MODULE ================= */
     .study-container {
-      padding: 24px 20px;
+      padding: 32px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 24px;
+      text-align: center;
     }
 
     .timer-display {
       font-size: 52px;
       font-weight: 300;
       letter-spacing: 2px;
-      color: var(--text-main);
       margin: 10px 0;
     }
 
@@ -353,7 +370,7 @@
       display: flex;
       gap: 12px;
       width: 100%;
-      max-width: 300px;
+      max-width: 280px;
     }
 
     .timer-btn {
@@ -369,35 +386,31 @@
     .btn-start { background: var(--accent); color: #fff; border-color: var(--accent); }
     .btn-reset { background: var(--surface-color); color: var(--text-main); }
 
-    .lock-setting {
+    /* ================= BOARD MODULE ================= */
+    .board-container {
+      padding: 16px;
       display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text-muted);
+      flex-direction: column;
+      gap: 12px;
     }
 
-    /* 集中ロックオーバーレイ */
-    #focus-lock-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(56, 54, 52, 0.85);
-      z-index: 1000;
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
+    .board-card {
+      background: var(--surface-color);
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     /* ================= MY PAGE MODULE ================= */
     .mypage-container {
-      padding: 24px 20px;
+      padding: 30px 20px;
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 20px;
+      text-align: center;
     }
 
     .profile-card {
@@ -405,15 +418,45 @@
       padding: 20px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
+      width: 100%;
+      max-width: 320px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .profile-card input {
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .setting-group {
+      background: var(--surface-color);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .menu-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
     }
 
     .menu-item {
@@ -427,14 +470,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: var(--text-main);
     }
+    .menu-item:hover { background: #faf9f6; }
 
-    .menu-item:hover {
-      background: #faf9f6;
-    }
-
-    /* ミニゲーム モーダル */
+    /* モーダル */
     .modal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -449,13 +488,13 @@
     .modal-content {
       background: var(--surface-color);
       width: 100%;
-      max-width: 360px;
+      max-width: 320px;
       padding: 24px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       text-align: center;
     }
   </style>
@@ -467,93 +506,92 @@
     <!-- TALK MODULE -->
     <div id="tab-talk" class="content active">
       <div class="talk-header">
-        <input type="text" id="global-search" class="search-box" placeholder="メッセージやメンバーを検索..." oninput="filterMessages()">
+        <input type="text" id="global-search" class="search-box" placeholder="メッセージや友達を検索..." oninput="filterTalkContent()">
         <div class="talk-tabs">
-          <button class="talk-tab active" onclick="switchTalkTab('pending', this)">未承認</button>
-          <button class="talk-tab" onclick="switchTalkTab('friends', this)">友達</button>
-          <button class="talk-tab" onclick="switchTalkTab('groups', this)">グループ</button>
+          <button class="talk-tab active" onclick="switchTalkSubTab('all', this)">全体</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('unapproved', this)">未承認</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('friends', this)">友達</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('groups', this)">グループ</button>
+          <button class="talk-tab" onclick="switchTalkSubTab('add', this)">＋ 友達追加</button>
         </div>
       </div>
       
-      <div class="chat-messages" id="chat-messages">
-        <!-- 動的描画 -->
-      </div>
-
-      <div class="reply-preview-bar" id="reply-preview-bar">
-        <span id="reply-text-preview" style="font-size:12px; color:var(--text-muted);"></span>
-        <button onclick="cancelReply()" style="background:none; border:none; cursor:pointer; font-size:12px;">✕</button>
-      </div>
-
-      <div class="chat-input-area">
-        <input type="text" id="chat-input" class="chat-input" placeholder="メッセージを入力..." onkeypress="handleKey(event)">
-        <button class="chat-send-btn" onclick="sendMessage()">送信</button>
+      <!-- メインのチャット・リスト表示領域 -->
+      <div id="talk-body-area" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area" id="chat-input-area">
+          <input type="text" id="chat-input" class="chat-input" placeholder="メッセージを入力..." onkeypress="handleKey(event)">
+          <button class="chat-send-btn" onclick="sendMessage()">送信</button>
+        </div>
       </div>
     </div>
 
     <!-- CALENDAR MODULE -->
     <div id="tab-calendar" class="content">
       <div class="cal-header">
-        <div class="cal-title" id="cal-month-title">2026年 10月</div>
+        <div class="cal-title" id="cal-month-title" style="font-weight:600; font-size:14px;">2026年 10月</div>
         <button class="icon-btn" onclick="openEventModal()">＋</button>
       </div>
       <div class="cal-grid" id="cal-grid">
-        <!-- 曜日ヘッダー -->
-        <div class="cal-day-name">日</div>
-        <div class="cal-day-name">月</div>
-        <div class="cal-day-name">火</div>
-        <div class="cal-day-name">水</div>
-        <div class="cal-day-name">木</div>
-        <div class="cal-day-name">金</div>
-        <div class="cal-day-name">土</div>
-        <!-- カレンダー日付セル（動的生成） -->
+        <div class="cal-day-name">日</div><div class="cal-day-name">月</div><div class="cal-day-name">火</div>
+        <div class="cal-day-name">水</div><div class="cal-day-name">木</div><div class="cal-day-name">金</div><div class="cal-day-name">土</div>
       </div>
       <div class="day-detail-panel" id="day-detail-panel">
-        <h3 id="selected-date-title" style="font-size: 14px; margin-bottom: 10px; font-weight: 600;">日付を選択してください</h3>
+        <h3 id="selected-date-title" style="font-size: 14px; margin-bottom: 8px; font-weight: 600;">日付を選択してください</h3>
         <div id="selected-date-events" style="font-size: 13px; color: var(--text-muted);">予定はありません</div>
       </div>
     </div>
 
     <!-- STUDY LOG MODULE -->
     <div id="tab-study" class="content">
-      <div class="header">
-        <h1>STUDY LOG</h1>
-      </div>
+      <div class="header"><h1>STUDY LOG</h1></div>
       <div class="study-container">
-        <div style="font-size: 14px; color: var(--text-muted);">フォーカス・タイマー</div>
+        <div style="font-size: 14px; color: var(--text-muted);">集中タイマー</div>
         <div class="timer-display" id="timer-display">25:00</div>
-        
         <div class="timer-controls">
           <button class="timer-btn btn-start" id="timer-toggle-btn" onclick="toggleTimer()">スタート</button>
           <button class="timer-btn btn-reset" onclick="resetTimer()">リセット</button>
         </div>
+      </div>
+    </div>
 
-        <label class="lock-setting">
-          <input type="checkbox" id="lock-mode-checkbox">
-          <span>集中モード（タイマー中は他タブロック）</span>
-        </label>
+    <!-- BOARD MODULE -->
+    <div id="tab-board" class="content">
+      <div class="header"><h1>BOARD</h1></div>
+      <div class="board-container">
+        <div class="board-card">
+          <div style="font-weight:600; margin-bottom:4px;">📌 家族のルールメモ</div>
+          <div style="color:var(--text-muted); font-size:13px;">ゴミ出しの曜日や大切なお知らせをいつでも残せます。</div>
+        </div>
       </div>
     </div>
 
     <!-- MY PAGE MODULE -->
     <div id="tab-mypage" class="content">
-      <div class="header">
-        <h1>MY PAGE</h1>
-      </div>
+      <div class="header"><h1>MY PAGE</h1></div>
       <div class="mypage-container">
         <div class="profile-card">
-          <div style="font-weight: 600; font-size: 15px;">ユーザー名</div>
-          <input type="text" id="profile-name" value="パパ" style="margin-bottom:0;" onchange="saveProfile()">
+          <div style="font-size: 11px; color: var(--text-muted);">マイID: <span id="my-id-display">fam123</span></div>
+          <div style="font-size: 12px; color: var(--text-muted);">ニックネーム</div>
+          <input type="text" id="profile-name" value="パパ" class="chat-input" onchange="saveProfileSettings()">
+          <div style="font-size: 12px; color: var(--text-muted);">設定用合言葉</div>
+          <input type="text" id="profile-passphrase" value="family2026" class="chat-input" onchange="saveProfileSettings()">
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-row">
+            <span>友達追加を許可しない</span>
+            <input type="checkbox" id="setting-block-add" onchange="saveProfileSettings()">
+          </div>
+          <div class="setting-row">
+            <span>オンライン状態を表示する</span>
+            <input type="checkbox" id="setting-show-online" checked onchange="saveProfileSettings()">
+          </div>
         </div>
         
         <div class="menu-list">
-          <div class="menu-item" onclick="openGameModal('fortune')">
-            <span>今日の運勢を占う</span>
-            <span>›</span>
-          </div>
-          <div class="menu-item" onclick="openGameModal('brain')">
-            <span>脳トレ（数独・ミニパズル）</span>
-            <span>›</span>
-          </div>
+          <div class="menu-item" onclick="openGameModal('fortune')"><span>今日の運勢を占う</span><span>›</span></div>
+          <div class="menu-item" onclick="openGameModal('brain')"><span>脳トレ・ミニパズル</span><span>›</span></div>
         </div>
       </div>
     </div>
@@ -562,54 +600,72 @@
     <nav class="nav-bar">
       <button class="nav-btn active" onclick="switchTab('talk', this)">TALK</button>
       <button class="nav-btn" onclick="switchTab('calendar', this)">CALENDAR</button>
-      <button class="nav-btn" onclick="switchTab('study', this)">STUDY LOG</button>
+      <button class="nav-btn" onclick="switchTab('study', this)">STUDY</button>
+      <button class="nav-btn" onclick="switchTab('board', this)">BOARD</button>
       <button class="nav-btn" onclick="switchTab('mypage', this)">MY PAGE</button>
     </nav>
-
-  </div>
-
-  <!-- 集中ロック中画面 -->
-  <div id="focus-lock-overlay">
-    <h2>集中モード中</h2>
-    <p style="font-size: 13px; margin-top: 10px; color: #d0cbc0;">タイマーが終了するまで他のタブは開けません。</p>
   </div>
 
   <!-- ミニゲームモーダル -->
   <div class="modal" id="game-modal">
     <div class="modal-content">
       <h3 id="game-title" style="font-size: 15px;">ミニゲーム</h3>
-      <div id="game-body" style="font-size: 14px; color: var(--text-muted);">ここに内容が入ります</div>
+      <div id="game-body" style="font-size: 14px; color: var(--text-muted);">内容</div>
       <button class="timer-btn btn-start" onclick="closeGameModal()">閉じる</button>
     </div>
   </div>
 
   <script>
-    /* ---------------- 状態管理・初期化 ---------------- */
-    let currentTab = 'talk';
+    /* ---------------- データ初期化 & 永続化 ---------------- */
+    let currentTalkSubTab = 'all';
+    
     let messages = JSON.parse(localStorage.getItem('family_messages')) || [
-      { id: 1, sender: 'ママ', text: '今日の夕方、買い物お願いできる？', time: '12:10', read: true, type: 'group' },
-      { id: 2, sender: '自分', text: '了解！何買う？', time: '12:15', read: true, type: 'group' }
+      { id: 1, sender: 'ママ', text: '今日の夕方、買い物お願いできる？', time: '12:10', read: false },
+      { id: 2, sender: '自分', text: '了解！何買う？', time: '12:15', read: true }
     ];
+
+    let friends = JSON.parse(localStorage.getItem('family_friends')) || [
+      { id: 'mom01', name: 'ママ', online: true, unread: true },
+      { id: 'taro02', name: 'たろう', online: false, unread: false }
+    ];
+
+    let pendingRequests = JSON.parse(localStorage.getItem('family_pending')) || [
+      { id: 'hanako', name: 'はなこ', passphrase: 'secret' }
+    ];
+
+    let mySettings = JSON.parse(localStorage.getItem('family_my_settings')) || {
+      name: 'パパ',
+      myId: 'papa999',
+      passphrase: 'family2026',
+      blockAdd: false,
+      showOnline: true
+    };
+
     let events = JSON.parse(localStorage.getItem('family_events')) || [
-      { date: '2026-10-15', title: '家族会議', visibility: 'group', tag: '家庭' },
-      { date: '2026-10-20', title: '歯科検診', visibility: 'private', tag: '自分' }
+      { date: '2026-10-15', title: '家族会議', visibility: 'group' }
     ];
-    let replyingTo = null;
+
     let timerInterval = null;
     let timeLeft = 25 * 60;
     let isTimerRunning = false;
 
-    // タブ切り替え
-    function switchTab(tabId, btnElement) {
-      if (isTimerRunning && document.getElementById('lock-mode-checkbox').checked && tabId !== 'study') {
-        document.getElementById('focus-lock-overlay').style.display = 'flex';
-        setTimeout(() => {
-          document.getElementById('focus-lock-overlay').style.display = 'none';
-        }, 2000);
-        return;
-      }
+    // 初期読み込み時のマイページフォーム反映
+    document.getElementById('profile-name').value = mySettings.name;
+    document.getElementById('my-id-display').innerText = mySettings.myId;
+    document.getElementById('profile-passphrase').value = mySettings.passphrase;
+    document.getElementById('setting-block-add').checked = mySettings.blockAdd;
+    document.getElementById('setting-show-online').checked = mySettings.showOnline;
 
-      currentTab = tabId;
+    function saveProfileSettings() {
+      mySettings.name = document.getElementById('profile-name').value;
+      mySettings.passphrase = document.getElementById('profile-passphrase').value;
+      mySettings.blockAdd = document.getElementById('setting-block-add').checked;
+      mySettings.showOnline = document.getElementById('setting-show-online').checked;
+      localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
+    }
+
+    /* ---------------- タブ切り替え ---------------- */
+    function switchTab(tabId, btnElement) {
       document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       
@@ -619,32 +675,110 @@
       if (tabId === 'calendar') renderCalendar();
     }
 
-    function switchTalkTab(subTab, element) {
+    function switchTalkSubTab(subTab, element) {
       document.querySelectorAll('.talk-tab').forEach(el => el.classList.remove('active'));
       element.classList.add('active');
-      renderMessages();
+      currentTalkSubTab = subTab;
+      renderTalkContent();
     }
 
-    /* ---------------- TALK 機能 ---------------- */
+    /* ---------------- TALK & 友達管理 ---------------- */
+    function renderTalkContent(filterText = '') {
+      const area = document.getElementById('talk-body-area');
+      
+      if (currentTalkSubTab === 'add') {
+        // 友達追加画面
+        area.innerHTML = `
+          <div style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
+            <div style="font-size:14px; font-weight:600;">友達をID検索して追加</div>
+            <input type="text" id="search-id-input" class="search-box" placeholder="相手のIDを入力...">
+            <input type="text" id="search-pass-input" class="search-box" placeholder="合言葉を入力...">
+            <button class="timer-btn btn-start" onclick="sendFriendRequest()">承認リクエストを送る</button>
+          </div>
+        `;
+        return;
+      }
+
+      // 通常のチャットエリア / 友達リストエリアの復元
+      area.innerHTML = `
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area" id="chat-input-area">
+          <input type="text" id="chat-input" class="chat-input" placeholder="メッセージを入力..." onkeypress="handleKey(event)">
+          <button class="chat-send-btn" onclick="sendMessage()">送信</button>
+        </div>
+      `;
+
+      if (currentTalkSubTab === 'friends') {
+        // 縦並びの友達リスト
+        const msgContainer = document.getElementById('chat-messages');
+        document.getElementById('chat-input-area').style.display = 'none';
+        msgContainer.innerHTML = '';
+
+        if (friends.length === 0) {
+          msgContainer.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">友達はまだいません</div>';
+          return;
+        }
+
+        friends.forEach(f => {
+          const item = document.createElement('div');
+          item.className = 'friend-item';
+          item.innerHTML = `
+            <div class="friend-info">
+              <div class="avatar-wrapper">
+                ${f.name.charAt(0)}
+                ${f.online && mySettings.showOnline ? '<div class="online-dot"></div>' : ''}
+              </div>
+              <span style="font-size:14px; font-weight:500;">${f.name}</span>
+            </div>
+            ${f.unread ? '<div class="unread-dot"></div>' : ''}
+          `;
+          msgContainer.appendChild(item);
+        });
+        return;
+      }
+
+      if (currentTalkSubTab === 'unapproved') {
+        // 未承認リクエスト一覧
+        const msgContainer = document.getElementById('chat-messages');
+        document.getElementById('chat-input-area').style.display = 'none';
+        msgContainer.innerHTML = '';
+
+        if (pendingRequests.length === 0) {
+          msgContainer.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">未承認のリクエストはありません</div>';
+          return;
+        }
+
+        pendingRequests.forEach((req, idx) => {
+          const item = document.createElement('div');
+          item.className = 'friend-item';
+          item.innerHTML = `
+            <div style="font-size:14px;">${req.name} さんからのリクエスト</div>
+            <button class="timer-btn btn-start" style="padding:6px 12px; font-size:11px;" onclick="approveFriend(${idx})">承認</button>
+          `;
+          msgContainer.appendChild(item);
+        });
+        return;
+      }
+
+      // 「全体」または「グループ」タブ：通常のチャット画面
+      document.getElementById('chat-input-area').style.display = 'flex';
+      renderMessages(filterText);
+    }
+
     function renderMessages(filterText = '') {
       const container = document.getElementById('chat-messages');
+      if (!container) return;
       container.innerHTML = '';
       
-      const filtered = messages.filter(m => m.text.includes(filterText) || m.sender.includes(filterText));
-
-      filtered.forEach(m => {
-        const isMe = m.sender === (localStorage.getItem('my_name') || 'パパ');
+      messages.forEach(m => {
+        if (filterText && !m.text.includes(filterText)) return;
+        const isMe = m.sender === mySettings.name;
         const wrapper = document.createElement('div');
         wrapper.className = `msg-wrapper ${isMe ? 'me' : 'other'}`;
         
-        let replyHtml = m.replyTo ? `<div style="font-size:11px; color:var(--text-muted); border-left:2px solid var(--accent); padding-left:4px; margin-bottom:4px;">${m.replyTo}</div>` : '';
-
         wrapper.innerHTML = `
           <div class="msg-sender">${m.sender}</div>
-          <div class="msg-bubble">
-            ${replyHtml}
-            ${m.text}
-          </div>
+          <div class="msg-bubble">${m.text}</div>
           <div class="msg-meta">
             <span>${m.time}</span>
             ${isMe ? `<span>${m.read ? '既読' : ''}</span>` : ''}
@@ -663,20 +797,15 @@
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
       
-      const newMsg = {
+      messages.push({
         id: Date.now(),
-        sender: localStorage.getItem('my_name') || 'パパ',
+        sender: mySettings.name,
         text: text,
         time: timeStr,
-        read: true,
-        type: 'group',
-        replyTo: replyingTo ? `返信先: ${replyingTo}` : null
-      };
-
-      messages.push(newMsg);
+        read: true
+      });
       localStorage.setItem('family_messages', JSON.stringify(messages));
       input.value = '';
-      cancelReply();
       renderMessages();
     }
 
@@ -684,33 +813,45 @@
       if (e.key === 'Enter') sendMessage();
     }
 
-    function filterMessages() {
+    function filterTalkContent() {
       const query = document.getElementById('global-search').value;
-      renderMessages(query);
+      if (currentTalkSubTab === 'all' || currentTalkSubTab === 'groups') {
+        renderMessages(query);
+      }
     }
 
-    function cancelReply() {
-      replyingTo = null;
-      document.getElementById('reply-preview-bar').style.display = 'none';
+    function sendFriendRequest() {
+      const targetId = document.getElementById('search-id-input').value.trim();
+      const pass = document.getElementById('search-pass-input').value.trim();
+      if (!targetId || !pass) {
+        alert('IDと合言葉を入力してください');
+        return;
+      }
+      alert('リクエストを送信しました（相手の承認待ちです）');
+      document.getElementById('search-id-input').value = '';
+      document.getElementById('search-pass-input').value = '';
     }
 
-    /* ---------------- CALENDAR 機能 ---------------- */
+    function approveFriend(index) {
+      const approved = pendingRequests.splice(index, 1)[0];
+      friends.push({ id: approved.id, name: approved.name, online: true, unread: false });
+      localStorage.setItem('family_pending', JSON.stringify(pendingRequests));
+      localStorage.setItem('family_friends', JSON.stringify(friends));
+      renderTalkContent();
+      alert(`${approved.name} さんを友達に追加しました！`);
+    }
+
+    /* ---------------- CALENDAR ---------------- */
     function renderCalendar() {
       const grid = document.getElementById('cal-grid');
-      // 曜日ヘッダー以降をクリア
-      while (grid.children.length > 7) {
-        grid.removeChild(grid.lastChild);
-      }
+      while (grid.children.length > 7) grid.removeChild(grid.lastChild);
 
-      // 2026年10月のサンプル構築
       for (let i = 1; i <= 31; i++) {
         const cell = document.createElement('div');
         cell.className = 'cal-cell';
         const dateStr = `2026-10-${String(i).padStart(2, '0')}`;
         
         cell.innerHTML = `<div class="cal-date-num">${i}</div>`;
-        
-        // 当日の予定を表示
         events.filter(ev => ev.date === dateStr).forEach(ev => {
           const dot = document.createElement('div');
           dot.className = 'cal-event-dot';
@@ -718,56 +859,41 @@
           cell.appendChild(dot);
         });
 
-        cell.onclick = () => selectDate(dateStr);
+        cell.onclick = () => {
+          document.getElementById('selected-date-title').innerText = `${dateStr} の予定`;
+          const matched = events.filter(ev => ev.date === dateStr);
+          document.getElementById('selected-date-events').innerHTML = matched.length === 0 ? '予定はありません' : matched.map(e => `<div>・${e.title}</div>`).join('');
+        };
         grid.appendChild(cell);
       }
     }
 
-    function selectDate(dateStr) {
-      document.getElementById('selected-date-title').innerText = `${dateStr} の予定`;
-      const matched = events.filter(ev => ev.date === dateStr);
-      const container = document.getElementById('selected-date-events');
-      
-      if (matched.length === 0) {
-        container.innerHTML = '予定はありません';
-      } else {
-        container.innerHTML = matched.map(e => `<div>・${e.title} (${e.visibility === 'private' ? '自分用' : 'グループ'})</div>`).join('');
-      }
-    }
-
     function openEventModal() {
-      const title = prompt('予定のタイトルを入力してください:');
+      const title = prompt('予定のタイトルを入力:');
       if (!title) return;
-      const isPrivate = confirm('自分用（プライベート）にしますか？\n[OK] 自分用 / [キャンセル] グループ公開');
-      
-      events.push({
-        date: '2026-10-15',
-        title: title,
-        visibility: isPrivate ? 'private' : 'group',
-        tag: '一般'
-      });
+      events.push({ date: '2026-10-15', title: title, visibility: 'group' });
       localStorage.setItem('family_events', JSON.stringify(events));
       renderCalendar();
     }
 
-    /* ---------------- STUDY LOG (タイマー) 機能 ---------------- */
+    /* ---------------- STUDY TIMER ---------------- */
     function toggleTimer() {
       const btn = document.getElementById('timer-toggle-btn');
       if (isTimerRunning) {
         clearInterval(timerInterval);
         isTimerRunning = false;
         btn.innerText = 'スタート';
-        btn.classList.remove('btn-reset');
-        btn.classList.add('btn-start');
       } else {
         isTimerRunning = true;
         btn.innerText = '一時停止';
         timerInterval = setInterval(() => {
           if (timeLeft > 0) {
             timeLeft--;
-            updateTimerDisplay();
+            const min = Math.floor(timeLeft / 60);
+            const sec = timeLeft % 60;
+            document.getElementById('timer-display').innerText = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
           } else {
-            alert('お疲れ様でした！集中セッション終了です。');
+            alert('セッション終了！');
             resetTimer();
           }
         }, 1000);
@@ -778,37 +904,21 @@
       clearInterval(timerInterval);
       isTimerRunning = false;
       timeLeft = 25 * 60;
-      updateTimerDisplay();
-      const btn = document.getElementById('timer-toggle-btn');
-      btn.innerText = 'スタート';
+      document.getElementById('timer-display').innerText = '25:00';
+      document.getElementById('timer-toggle-btn').innerText = 'スタート';
     }
 
-    function updateTimerDisplay() {
-      const min = Math.floor(timeLeft / 60);
-      const sec = timeLeft % 60;
-      document.getElementById('timer-display').innerText = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    }
-
-    /* ---------------- MY PAGE & MINI GAME ---------------- */
-    function saveProfile() {
-      const name = document.getElementById('profile-name').value;
-      localStorage.setItem('my_name', name);
-    }
-
+    /* ---------------- MINI GAME ---------------- */
     function openGameModal(type) {
-      const modal = document.getElementById('game-modal');
+      document.getElementById('game-modal').style.display = 'flex';
       const title = document.getElementById('game-title');
       const body = document.getElementById('game-body');
-      
-      modal.style.display = 'flex';
       if (type === 'fortune') {
         title.innerText = '今日の運勢';
-        const fortunes = ['大吉 - 心穏やかに過ごせる一日', '中吉 - 小さなラッキーが見つかるかも', '小吉 - 丁寧な作業が吉を呼ぶ'];
-        const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-        body.innerHTML = `<div style="font-size:18px; font-weight:600; color:var(--text-main); margin:10px 0;">${randomFortune}</div>ラッキーカラー：グレージュ`;
+        body.innerHTML = '<div style="font-size:18px; font-weight:600; margin:10px 0;">大吉 - 心穏やかな一日</div>ラッキーカラー：グレージュ';
       } else {
-        title.innerText = '脳トレ・ミニパズル';
-        body.innerHTML = '「今日の暗記チャレンジ：3桁の数字 [ 4 8 2 ] を覚えておこう！」';
+        title.innerText = '脳トレ';
+        body.innerHTML = '今日の暗記数字：[ 4 8 2 ]';
       }
     }
 
@@ -817,7 +927,7 @@
     }
 
     // 初期描画
-    renderMessages();
+    renderTalkContent();
   </script>
 </body>
 </html>
