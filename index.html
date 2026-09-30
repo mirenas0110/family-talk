@@ -540,36 +540,31 @@
       text-align: center;
     }
 
-    /* 数独用スタイル */
-    .sudoku-grid {
-      display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      gap: 1px;
-      background: var(--border-dark);
-      border: 2px solid var(--accent);
-      margin: 8px auto;
-      max-width: 270px;
-    }
-    .sudoku-cell {
+    /* ログイン画面 */
+    #login-screen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: var(--surface-color);
-      aspect-ratio: 1;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 600;
-      border: none;
-      outline: none;
-      padding: 0;
-    }
-    .sudoku-cell:focus {
-      background: var(--bubble-me);
-    }
-    .sudoku-cell:read-only {
-      background: #f0ede6;
-      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 500;
+      padding: 30px;
     }
   </style>
 </head>
 <body>
+
+  <!-- ログイン画面 -->
+  <div id="login-screen">
+    <div style="width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 14px; text-align: center;">
+      <h2 style="font-size: 18px; margin-bottom: 6px;">ログイン</h2>
+      <div style="font-size: 12px; color: var(--text-muted); text-align: left;">ログイン用PW</div>
+      <input type="password" id="login-password-input" class="search-box" placeholder="パスワードを入力..." style="margin:0;">
+      <button class="timer-btn btn-start" onclick="tryLogin()">ログイン</button>
+    </div>
+  </div>
 
   <div class="app-container">
 
@@ -581,7 +576,6 @@
           <select id="cal-month-select" class="cal-select" onchange="onMonthSelectChanged()">
             <!-- 動的に生成されます -->
           </select>
-          <button class="icon-btn" onclick="changeMonth(1)">▶</button>
         </div>
         <button class="icon-btn" onclick="openEventModal()">＋</button>
       </div>
@@ -596,7 +590,7 @@
     </div>
 
     <!-- 2. TALK MODULE -->
-    <div id="tab-talk" class="content active">
+    <div id="tab-talk" class="content">
       <div class="talk-header">
         <input type="text" id="global-search" class="search-box" placeholder="メッセージや友達を検索..." oninput="filterTalkContent()">
         <div class="talk-tabs">
@@ -617,8 +611,8 @@
       </div>
     </div>
 
-    <!-- 3. MY PAGE MODULE -->
-    <div id="tab-mypage" class="content">
+    <!-- 3. MY PAGE MODULE (初期表示) -->
+    <div id="tab-mypage" class="content active">
       <div class="header">
         <h1>MY PAGE</h1>
         <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openSettingsModal()">⚙️</button>
@@ -639,7 +633,6 @@
         <div class="menu-list">
           <div class="menu-item" onclick="openFocusHistoryScreen()"><span>FOCUS 記録一覧</span><span>›</span></div>
           <div class="menu-item" onclick="openGameModal('fortune')"><span>今日の運勢を占う</span><span>›</span></div>
-          <div class="menu-item" onclick="openGameModal('sudoku')"><span>数独・ナンプレ (デイリー)</span><span>›</span></div>
         </div>
       </div>
     </div>
@@ -694,7 +687,7 @@
         <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openBoardPostModal()">＋</button>
       </div>
       <div class="board-container" id="board-container">
-        <!-- 掲示板 / 日記アイテムが動的に入ります -->
+        <!-- 掲示板 / 日記アイテムが動きます -->
       </div>
     </div>
 
@@ -727,14 +720,24 @@
           <button class="timer-btn btn-start" id="timer-toggle-btn" onclick="toggleFocusAction()">スタート</button>
           <button class="timer-btn btn-reset" onclick="resetFocusAction()">リセット</button>
         </div>
+
+        <!-- FOCUSタグ画面（FOCUSの中に内包） -->
+        <div style="width: 100%; max-width: 280px; background: var(--surface-color); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; text-align: left; margin-top: 6px;">
+          <div style="font-size: 12px; color: var(--text-muted);">FOCUSタグの管理</div>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="new-focus-tag-input" class="search-box" placeholder="新しいタグを追加..." style="margin:0;">
+            <button class="timer-btn btn-start" style="padding: 0 10px; font-size:11px; flex:none;" onclick="addNewFocusTag()">追加</button>
+          </div>
+          <div id="focus-tags-list" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;"></div>
+        </div>
       </div>
     </div>
 
     <!-- ボトムナビゲーション -->
-    <nav class="nav-bar">
+    <nav class="nav-bar" id="main-nav-bar">
       <button class="nav-btn" onclick="switchTab('calendar', this)">Calendar</button>
-      <button class="nav-btn active" onclick="switchTab('talk', this)">Talk</button>
-      <button class="nav-btn" onclick="switchTab('mypage', this)">My Page</button>
+      <button class="nav-btn" onclick="switchTab('talk', this)">Talk</button>
+      <button class="nav-btn active" onclick="switchTab('mypage', this)">My Page</button>
       <button class="nav-btn" onclick="switchTab('board', this)">Board</button>
       <button class="nav-btn" onclick="switchTab('focus', this)">Focus</button>
     </nav>
@@ -766,11 +769,7 @@
 
       <div style="font-size: 12px; color: var(--text-muted);">タグ</div>
       <select id="event-tag-select" class="search-box" style="margin:0;">
-        <option value="予定">予定</option>
-        <option value="勉強">勉強</option>
-        <option value="学校">学校</option>
-        <option value="家族">家族</option>
-        <option value="プライベート">プライベート</option>
+        <!-- 動的タグリスト -->
       </select>
 
       <div style="display:flex; gap:8px; margin-top:8px;">
@@ -786,13 +785,9 @@
       <h3 style="font-size: 15px;">計測完了の記録</h3>
       <div id="focus-recorded-time" style="font-size: 14px; color: var(--text-muted);"></div>
       <div style="font-size: 12px; text-align:left; color:var(--text-muted);">タグを選択</div>
-      <select id="focus-tag-select" class="search-box" style="margin:0;">
+      <select id="focus-record-tag-select" class="search-box" style="margin:0;">
         <!-- タグオプション -->
       </select>
-      <div style="display:flex; gap:6px;">
-        <input type="text" id="new-focus-tag-input" class="search-box" placeholder="新しいタグを追加..." style="margin:0;">
-        <button class="timer-btn btn-reset" style="padding: 0 10px; font-size:11px; flex:none;" onclick="addNewFocusTag()">追加</button>
-      </div>
       <div style="display:flex; gap:8px; margin-top:8px;">
         <button class="timer-btn btn-reset" onclick="closeFocusRecordModal(false)">破棄</button>
         <button class="timer-btn btn-start" onclick="saveFocusRecord(true)">記録する</button>
@@ -807,7 +802,9 @@
       <textarea id="board-post-text" class="search-box" placeholder="今日の出来事やメモを入力..." style="height:90px; margin:0; resize:none;"></textarea>
       
       <div style="font-size: 12px; color:var(--text-muted);">タグ</div>
-      <input type="text" id="board-post-tag" class="search-box" placeholder="例: 日記, 勉強, 共有" style="margin:0;">
+      <select id="board-post-tag-select" class="search-box" style="margin:0;">
+        <!-- 動的タグリスト -->
+      </select>
 
       <div style="font-size: 12px; color:var(--text-muted);">公開範囲</div>
       <select id="board-visibility-select" class="search-box" style="margin:0;">
@@ -822,13 +819,48 @@
     </div>
   </div>
 
+  <!-- グループ作成モーダル -->
+  <div class="modal" id="group-create-modal">
+    <div class="modal-content" style="max-width: 320px; text-align:left;">
+      <h3 style="font-size: 15px; text-align:center;">グループの作成</h3>
+      <div style="font-size: 12px; color: var(--text-muted);">グループ名 (タグとしても追加されます)</div>
+      <input type="text" id="group-name-input" class="search-box" placeholder="例: 勉強会, 家族A" style="margin:0;">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="timer-btn btn-reset" onclick="closeGroupCreateModal()">キャンセル</button>
+        <button class="timer-btn btn-start" onclick="saveGroupCreate()">作成する</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ミニゲームモーダル -->
   <div class="modal" id="game-modal">
     <div class="modal-content" style="max-width: 320px;">
       <h3 id="game-title" style="font-size: 15px;">ミニゲーム</h3>
       <div id="game-body" style="font-size: 14px; color: var(--text-muted);">内容</div>
-      <div id="game-action-area" style="display:none; margin-top:4px;"></div>
       <button class="timer-btn btn-start" style="margin-top:8px;" onclick="closeGameModal()">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 設定モーダル -->
+  <div class="modal" id="settings-modal">
+    <div class="modal-content" style="max-width: 320px; text-align:left;">
+      <h3 style="font-size: 15px; text-align:center;">設定</h3>
+      
+      <div style="font-size: 12px; color: var(--text-muted);">ベースカラー設定</div>
+      <select id="settings-basecolor" class="search-box" style="margin:0;" onchange="changeBaseColor(this.value)">
+        <option value="default">デフォルト (暖色系)</option>
+        <option value="dark">ダークモード風</option>
+        <option value="blue">ブルー系</option>
+        <option value="green">グリーン系</option>
+      </select>
+
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+        <input type="checkbox" id="settings-lock-check" onchange="toggleLockSetting()">
+        <label for="settings-lock-check" style="font-size: 13px; cursor: pointer;">FOCUS記録中にマイページとFOCUS以外開けなくする</label>
+      </div>
+
+      <button class="timer-btn btn-reset" style="margin-top: 12px; color: #d9534f; border-color: #d9534f;" onclick="logoutApp()">ログアウト</button>
+      <button class="timer-btn btn-start" style="margin-top: 6px;" onclick="closeSettingsModal()">閉じる</button>
     </div>
   </div>
 
@@ -838,13 +870,16 @@
     let messages = JSON.parse(localStorage.getItem('family_messages')) || [];
     let friends = JSON.parse(localStorage.getItem('family_friends')) || [];
     let pendingRequests = JSON.parse(localStorage.getItem('family_pending')) || [];
+    let groups = JSON.parse(localStorage.getItem('family_groups')) || [];
 
     let mySettings = JSON.parse(localStorage.getItem('family_my_settings')) || {
       name: 'ゲストユーザー',
       myId: 'user_' + Math.floor(Math.random() * 1000),
       passphrase: 'friend_pass_123',
       loginPassword: 'password123',
-      avatar: ''
+      avatar: '',
+      baseColor: 'default',
+      lockDuringFocus: false
     };
 
     let events = JSON.parse(localStorage.getItem('family_events')) || [];
@@ -869,11 +904,27 @@
       { id: 1, text: '今日は集中して課題を片付けられた。明日もこの調子で頑張る。', tag: '日記', visibility: 'private', time: '2026/10/15 21:00', author: 'ゲストユーザー' }
     ];
 
-    // 初期UI反映
+    // 初期UI・ログイン状態適用
+    applyBaseColor(mySettings.baseColor || 'default');
     updateMyPageUI();
     renderBoardPosts();
-    updateFocusTagOptions();
+    renderFocusTagsUI();
     initCalendarSelect();
+
+    function tryLogin() {
+      const pw = document.getElementById('login-password-input').value;
+      if (pw === (mySettings.loginPassword || 'password123')) {
+        document.getElementById('login-screen').style.display = 'none';
+      } else {
+        alert('パスワードが違います');
+      }
+    }
+
+    function logoutApp() {
+      closeSettingsModal();
+      document.getElementById('login-password-input').value = '';
+      document.getElementById('login-screen').style.display = 'flex';
+    }
 
     function updateMyPageUI() {
       document.getElementById('display-name').innerText = mySettings.name;
@@ -937,10 +988,79 @@
     }
 
     function openSettingsModal() {
-      alert('設定画面：環境設定を行います。');
+      document.getElementById('settings-basecolor').value = mySettings.baseColor || 'default';
+      document.getElementById('settings-lock-check').checked = !!mySettings.lockDuringFocus;
+      document.getElementById('settings-modal').style.display = 'flex';
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').style.display = 'none';
+    }
+
+    function changeBaseColor(theme) {
+      mySettings.baseColor = theme;
+      localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
+      applyBaseColor(theme);
+    }
+
+    function applyBaseColor(theme) {
+      const root = document.documentElement;
+      if (theme === 'dark') {
+        root.style.setProperty('--bg-color', '#1a1a1a');
+        root.style.setProperty('--surface-color', '#242424');
+        root.style.setProperty('--border-color', '#333333');
+        root.style.setProperty('--border-dark', '#444444');
+        root.style.setProperty('--text-main', '#e0e0e0');
+        root.style.setProperty('--text-muted', '#a0a0a0');
+        root.style.setProperty('--accent', '#6c757d');
+        root.style.setProperty('--bubble-me', '#3a3a3a');
+        root.style.setProperty('--bubble-other', '#2c2c2c');
+      } else if (theme === 'blue') {
+        root.style.setProperty('--bg-color', '#f0f4f8');
+        root.style.setProperty('--surface-color', '#ffffff');
+        root.style.setProperty('--border-color', '#d9e2ec');
+        root.style.setProperty('--border-dark', '#bcccdc');
+        root.style.setProperty('--text-main', '#102a43');
+        root.style.setProperty('--text-muted', '#486581');
+        root.style.setProperty('--accent', '#334e68');
+        root.style.setProperty('--bubble-me', '#d9e2ec');
+        root.style.setProperty('--bubble-other', '#ffffff');
+      } else if (theme === 'green') {
+        root.style.setProperty('--bg-color', '#f1f8f5');
+        root.style.setProperty('--surface-color', '#ffffff');
+        root.style.setProperty('--border-color', '#d8e6df');
+        root.style.setProperty('--border-dark', '#b8ccc2');
+        root.style.setProperty('--text-main', '#1e3329');
+        root.style.setProperty('--text-muted', '#4d665b');
+        root.style.setProperty('--accent', '#3b6e56');
+        root.style.setProperty('--bubble-me', '#d8e6df');
+        root.style.setProperty('--bubble-other', '#ffffff');
+      } else {
+        root.style.setProperty('--bg-color', '#f7f6f3');
+        root.style.setProperty('--surface-color', '#ffffff');
+        root.style.setProperty('--border-color', '#e2ded5');
+        root.style.setProperty('--border-dark', '#d0cbc0');
+        root.style.setProperty('--text-main', '#383634');
+        root.style.setProperty('--text-muted', '#7c766e');
+        root.style.setProperty('--accent', '#5a554e');
+        root.style.setProperty('--bubble-me', '#eae5dc');
+        root.style.setProperty('--bubble-other', '#ffffff');
+      }
+    }
+
+    function toggleLockSetting() {
+      mySettings.lockDuringFocus = document.getElementById('settings-lock-check').checked;
+      localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
     }
 
     function switchTab(tabId, btnElement) {
+      if (isFocusRunning && mySettings.lockDuringFocus) {
+        if (tabId !== 'mypage' && tabId !== 'focus') {
+          alert('FOCUS計測中はマイページとFOCUS以外開けません！');
+          return;
+        }
+      }
+
       document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
       
@@ -970,6 +1090,17 @@
             <button class="timer-btn btn-start" onclick="sendFriendRequest()">承認リクエストを送る</button>
           </div>
         `;
+        return;
+      }
+
+      if (currentTalkSubTab === 'groups') {
+        area.innerHTML = `
+          <div style="padding: 16px; display:flex; flex-direction:column; gap:12px; flex:1; overflow-y:auto;">
+            <button class="timer-btn btn-start" onclick="openGroupCreateModal()">＋ グループ作成</button>
+            <div id="groups-list-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+        `;
+        renderGroupsList();
         return;
       }
 
@@ -1034,6 +1165,57 @@
 
       document.getElementById('chat-input-area').style.display = 'flex';
       renderMessages(filterText);
+    }
+
+    function renderGroupsList() {
+      const container = document.getElementById('groups-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (groups.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center;">グループはありません</div>';
+        return;
+      }
+
+      groups.forEach(g => {
+        const item = document.createElement('div');
+        item.className = 'board-card';
+        item.innerHTML = `
+          <div style="font-weight:600; font-size:15px;">👥 ${g.name}</div>
+          <div style="font-size:12px; color:var(--text-muted);">メンバー (${g.members ? g.members.length : 1}名) - 閲覧共有中</div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function openGroupCreateModal() {
+      document.getElementById('group-name-input').value = '';
+      document.getElementById('group-create-modal').style.display = 'flex';
+    }
+
+    function closeGroupCreateModal() {
+      document.getElementById('group-create-modal').style.display = 'none';
+    }
+
+    function saveGroupCreate() {
+      const name = document.getElementById('group-name-input').value.trim();
+      if (!name) {
+        alert('グループ名を入力してください');
+        return;
+      }
+
+      groups.push({ id: Date.now(), name: name, members: [mySettings.name] });
+      localStorage.setItem('family_groups', JSON.stringify(groups));
+
+      // カレンダーと掲示板のタグにも自動追加
+      if (!focusTags.includes(name)) {
+        focusTags.push(name);
+        localStorage.setItem('family_focus_tags', JSON.stringify(focusTags));
+      }
+
+      closeGroupCreateModal();
+      renderGroupsList();
+      alert(`グループ「${name}」を作成しました！カレンダーや掲示板のタグにも追加されました。`);
     }
 
     function renderMessages(filterText = '') {
@@ -1216,7 +1398,7 @@
       const mins = Math.round(elapsedSecondsThisSession / 60);
       document.getElementById('focus-recorded-time').innerText = `計測時間: 約 ${mins} 分 (${elapsedSecondsThisSession}秒)`;
       document.getElementById('focus-record-modal').style.display = 'flex';
-      updateFocusTagOptions();
+      updateFocusRecordTagOptions();
     }
 
     function closeFocusRecordModal(save = false) {
@@ -1226,14 +1408,26 @@
       }
     }
 
-    function updateFocusTagOptions() {
-      const select = document.getElementById('focus-tag-select');
+    function updateFocusRecordTagOptions() {
+      const select = document.getElementById('focus-record-tag-select');
       select.innerHTML = '';
       focusTags.forEach(tag => {
         const opt = document.createElement('option');
         opt.value = tag;
         opt.innerText = tag;
         select.appendChild(opt);
+      });
+    }
+
+    function renderFocusTagsUI() {
+      const listContainer = document.getElementById('focus-tags-list');
+      if (!listContainer) return;
+      listContainer.innerHTML = '';
+      focusTags.forEach(tag => {
+        const badge = document.createElement('span');
+        badge.className = 'tag-badge';
+        badge.innerText = `# ${tag}`;
+        listContainer.appendChild(badge);
       });
     }
 
@@ -1244,13 +1438,12 @@
         focusTags.push(newTag);
         localStorage.setItem('family_focus_tags', JSON.stringify(focusTags));
       }
-      updateFocusTagOptions();
-      document.getElementById('focus-tag-select').value = newTag;
+      renderFocusTagsUI();
       document.getElementById('new-focus-tag-input').value = '';
     }
 
     function saveFocusRecord() {
-      const tag = document.getElementById('focus-tag-select').value || '集中';
+      const tag = document.getElementById('focus-record-tag-select').value || '集中';
       const mins = Math.max(1, Math.round(elapsedSecondsThisSession / 60));
       const now = new Date();
       const dateStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -1325,7 +1518,16 @@
 
     function openBoardPostModal() {
       document.getElementById('board-post-text').value = '';
-      document.getElementById('board-post-tag').value = '';
+      
+      const select = document.getElementById('board-post-tag-select');
+      select.innerHTML = '';
+      focusTags.forEach(tag => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        opt.innerText = tag;
+        select.appendChild(opt);
+      });
+
       document.getElementById('board-post-modal').style.display = 'flex';
     }
 
@@ -1335,7 +1537,7 @@
 
     function saveBoardPost() {
       const text = document.getElementById('board-post-text').value.trim();
-      const tag = document.getElementById('board-post-tag').value.trim() || '日記';
+      const tag = document.getElementById('board-post-tag-select').value || '日記';
       const visibility = document.getElementById('board-visibility-select').value;
       if (!text) {
         alert('内容を入力してください');
@@ -1472,7 +1674,15 @@
       document.getElementById('event-time-input').value = '09:00';
       document.getElementById('event-title-input').value = '';
       document.getElementById('event-memo-input').value = '';
-      document.getElementById('event-tag-select').value = '予定';
+
+      const select = document.getElementById('event-tag-select');
+      select.innerHTML = '';
+      focusTags.forEach(tag => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        opt.innerText = tag;
+        select.appendChild(opt);
+      });
 
       document.getElementById('event-modal').style.display = 'flex';
     }
@@ -1514,75 +1724,16 @@
       alert('予定を追加しました！');
     }
 
-    /* ---------------- MINI GAME / SUDOKU ---------------- */
+    /* ---------------- MINI GAME (FORTUNE ONLY) ---------------- */
     function openGameModal(type) {
       document.getElementById('game-modal').style.display = 'flex';
       const title = document.getElementById('game-title');
       const body = document.getElementById('game-body');
-      const actionArea = document.getElementById('game-action-area');
-      actionArea.style.display = 'none';
-      actionArea.innerHTML = '';
 
       if (type === 'fortune') {
         title.innerText = '今日の運勢';
         body.innerHTML = '<div style="font-size:18px; font-weight:600; margin:10px 0;">大吉 - 心穏やかな一日</div>ラッキーカラー：グレージュ';
-      } else if (type === 'sudoku') {
-        title.innerText = '本日の数独 (デイリー)';
-        
-        // 簡易日替わりランダムシード生成 (YYYYMMDD)
-        const now = new Date();
-        const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-        
-        // サンプルとして固定の有効な数独パズルをシードに基づいて1つ選択またはスワップ
-        const puzzles = [
-          // パズル1
-          [
-            5,3,0, 0,7,0, 0,0,0,
-            6,0,0, 1,9,5, 0,0,0,
-            0,9,8, 0,0,0, 0,6,0,
-            8,0,0, 0,6,0, 0,0,3,
-            4,0,0, 8,0,3, 0,0,1,
-            7,0,0, 0,2,0, 0,0,6,
-            0,6,0, 0,0,0, 2,8,0,
-            0,0,0, 4,1,9, 0,0,5,
-            0,0,0, 0,8,0, 0,7,9
-          ],
-          // パズル2
-          [
-            0,0,0, 2,6,0, 7,0,1,
-            6,8,0, 0,7,0, 0,9,0,
-            1,9,0, 0,0,4, 5,0,0,
-            8,2,0, 1,0,0, 0,4,0,
-            0,0,4, 6,0,2, 9,0,0,
-            0,5,0, 0,0,3, 0,2,8,
-            0,0,9, 3,0,0, 0,7,4,
-            0,4,0, 0,5,0, 0,3,6,
-            7,0,3, 0,1,8, 0,0,0
-          ]
-        ];
-        
-        const currentPuzzle = puzzles[seed % puzzles.length];
-
-        let html = '<div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">空欄に1〜9の数字を入れてね</div>';
-        html += '<div class="sudoku-grid">';
-        for (let i = 0; i < 81; i++) {
-          const val = currentPuzzle[i];
-          if (val !== 0) {
-            html += `<input type="text" class="sudoku-cell" value="${val}" readonly>`;
-          } else {
-            html += `<input type="text" maxlength="1" class="sudoku-cell" data-index="${i}">`;
-          }
-        }
-        html += '</div>';
-        body.innerHTML = html;
-
-        actionArea.style.display = 'block';
-        actionArea.innerHTML = '<button class="timer-btn btn-start" style="width:100%; font-size:12px; padding:8px;" onclick="checkSudokuAnswer()">答え合わせ</button>';
       }
-    }
-
-    function checkSudokuAnswer() {
-      alert('数独に入力完了しました！素晴らしい集中力です！');
     }
 
     function closeGameModal() {
