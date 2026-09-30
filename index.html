@@ -48,6 +48,7 @@
             flex-direction: column;
             position: relative;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
 
         @media (min-width: 481px) {
@@ -202,7 +203,7 @@
             margin-top: 4px;
         }
 
-        /* メインアプリ画面 */
+        /* メインアプリ画面構造 */
         #main-app {
             display: flex;
             flex-direction: column;
@@ -210,18 +211,21 @@
             overflow: hidden;
         }
 
-        /* コンテンツエリア */
+        /* コンテンツエリア (各タブの親) */
         .content-area {
             flex: 1;
-            overflow-y: auto;
             position: relative;
+            overflow: hidden;
             background-color: var(--bg-color);
         }
 
         .tab-content {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
             display: none;
-            height: 100%;
             flex-direction: column;
+            background-color: var(--bg-color);
+            overflow-y: auto;
         }
 
         .tab-content.active {
@@ -231,6 +235,7 @@
         /* 下部タブバー (5個) */
         .bottom-nav {
             height: 65px;
+            min-height: 65px;
             background-color: var(--surface-color);
             border-top: 1px solid var(--border-color);
             display: flex;
@@ -269,6 +274,95 @@
         .nav-item.active svg {
             width: 24px;
             height: 24px;
+        }
+
+        /* 共通タブペイン */
+        .tab-pane {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .pane-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        /* --- カレンダータブ (月間カレンダー) --- */
+        .calendar-wrapper {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .calendar-header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .calendar-weekday {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding-bottom: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 4px;
+            font-size: 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background-color: var(--bg-color);
+            border-color: var(--border-color);
+        }
+
+        .calendar-day.other-month {
+            color: #cbd5e1;
+        }
+
+        .calendar-day.selected {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .event-dot {
+            width: 5px;
+            height: 5px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+        .calendar-day.selected .event-dot {
+            background-color: white;
         }
 
         /* --- トークタブ関連 --- */
@@ -459,46 +553,6 @@
             margin-top: 8px;
         }
 
-        /* --- 各タブの中身 --- */
-        .tab-pane {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            height: 100%;
-            overflow-y: auto;
-        }
-
-        .pane-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        /* カレンダータブ */
-        .calendar-box {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .event-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .event-item {
-            padding: 10px;
-            background: var(--bg-color);
-            border-radius: 8px;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-        }
-
         /* メインタブ (ダッシュボード) */
         .dashboard-grid {
             display: grid;
@@ -624,21 +678,36 @@
         <div id="main-app" class="hidden">
             <div class="content-area">
                 
-                <!-- カレンダータブ -->
+                <!-- カレンダータブ (月間カレンダー) -->
                 <div id="tab-calendar" class="tab-pane tab-content">
-                    <h2 class="pane-title">カレンダー</h2>
-                    <div class="calendar-box">
-                        <div class="input-group">
-                            <label>日付</label>
-                            <input type="date" id="cal-date">
+                    <h2 class="pane-title">Calendar</h2>
+                    <div class="calendar-wrapper">
+                        <div class="calendar-header-nav">
+                            <button class="btn-secondary" style="padding: 4px 10px;" onclick="changeMonth(-1)">◀</button>
+                            <span id="calendar-month-label">2026年 9月</span>
+                            <button class="btn-secondary" style="padding: 4px 10px;" onclick="changeMonth(1)">▶</button>
                         </div>
+                        <div class="calendar-grid" id="calendar-grid-header">
+                            <div class="calendar-weekday" style="color:var(--danger-color)">日</div>
+                            <div class="calendar-weekday">月</div>
+                            <div class="calendar-weekday">火</div>
+                            <div class="calendar-weekday">水</div>
+                            <div class="calendar-weekday">木</div>
+                            <div class="calendar-weekday">金</div>
+                            <div class="calendar-weekday" style="color:var(--accent-color)">土</div>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid-days"></div>
+                    </div>
+
+                    <div style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <h3 id="selected-date-title" style="font-size: 14px; font-weight: 700;">日付を選択してください</h3>
                         <div class="input-group">
                             <label>予定内容</label>
                             <input type="text" id="cal-text" placeholder="例: ミーティング">
                         </div>
-                        <button class="btn-primary" onclick="addCalendarEvent()">予定を追加</button>
+                        <button class="btn-primary" onclick="addCalendarEvent()">この日の予定を追加</button>
                     </div>
-                    <div class="event-list" id="calendar-event-list"></div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;" id="calendar-event-list"></div>
                 </div>
 
                 <!-- トークタブ -->
@@ -659,7 +728,7 @@
                             <!-- 動的挿入 -->
                         </div>
                     </div>
-                    <!-- 個別チャットルームビュー (モーダル・オーバーレイ) -->
+                    <!-- 個別チャットルームビュー (オーバーレイ) -->
                     <div id="chat-room-view" class="chat-room-view hidden">
                         <div class="chat-room-header">
                             <button class="btn-secondary" onclick="closeChatRoom()" style="padding: 6px 10px;">← 戻る</button>
@@ -673,9 +742,9 @@
                     </div>
                 </div>
 
-                <!-- メインタブ (ダッシュボード & プロフィール) -->
+                <!-- メインタブ (ダッシュボード) -->
                 <div id="tab-main" class="tab-pane tab-content">
-                    <h2 class="pane-title">メインダッシュボード</h2>
+                    <h2 class="pane-title">Main</h2>
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
                             <h4>友達数</h4>
@@ -687,7 +756,7 @@
                         </div>
                     </div>
 
-                    <div style="margin-top: 10px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
                         <h3 style="font-size: 15px; font-weight: 700;">プロフィール編集 & 設定</h3>
                         <div class="input-group">
                             <label>ID (変更不可)</label>
@@ -702,13 +771,13 @@
                             <input type="password" id="profile-pass" placeholder="未入力ならそのまま">
                         </div>
                         <button class="btn-primary" onclick="updateProfile()">プロフィールを更新</button>
-                        <button class="btn-secondary" onclick="logout()" style="color: var(--danger-color); border-color: var(--danger-color); margin-top: 8px;">ログアウト</button>
+                        <button class="btn-secondary" onclick="logout()" style="color: var(--danger-color); border-color: var(--danger-color); margin-top: 4px;">ログアウト</button>
                     </div>
                 </div>
 
                 <!-- 掲示板タブ -->
                 <div id="tab-bulletin" class="tab-pane tab-content">
-                    <h2 class="pane-title">掲示板</h2>
+                    <h2 class="pane-title">Bulletin</h2>
                     <div class="post-card">
                         <div class="input-group">
                             <label>投稿内容</label>
@@ -776,7 +845,7 @@
             </div>
         </div>
 
-        <!-- モーダル：友達追加（IDと合言葉） -->
+        <!-- モーダル：友達追加 -->
         <div id="modal-friend-req" class="modal hidden">
             <div class="modal-card">
                 <h3>友達追加リクエスト</h3>
@@ -812,17 +881,16 @@
     </div>
 
     <script>
-        // --- アプリ全体の状態管理 ---
         let db = {
             users: JSON.parse(localStorage.getItem('app_users')) || [],
             currentUser: JSON.parse(localStorage.getItem('app_current_user')) || null,
-            friendRequests: JSON.parse(localStorage.getItem('app_friend_requests')) || [], // {from, to, keyword, status: 'pending'/'accepted'}
-            friends: JSON.parse(localStorage.getItem('app_friends')) || [], // {user1, user2}
-            groups: JSON.parse(localStorage.getItem('app_groups')) || [], // {id, name, members: []}
-            messages: JSON.parse(localStorage.getItem('app_messages')) || [], // {id, sender, receiver/groupId, text, type: 'private'/'group', timestamp}
-            calendar: JSON.parse(localStorage.getItem('app_calendar')) || [], // {user, date, text}
-            bulletin: JSON.parse(localStorage.getItem('app_bulletin')) || [], // {id, author, text, timestamp}
-            tasks: JSON.parse(localStorage.getItem('app_tasks')) || [] // {user, id, text, completed}
+            friendRequests: JSON.parse(localStorage.getItem('app_friend_requests')) || [],
+            friends: JSON.parse(localStorage.getItem('app_friends')) || [],
+            groups: JSON.parse(localStorage.getItem('app_groups')) || [],
+            messages: JSON.parse(localStorage.getItem('app_messages')) || [],
+            calendar: JSON.parse(localStorage.getItem('app_calendar')) || [],
+            bulletin: JSON.parse(localStorage.getItem('app_bulletin')) || [],
+            tasks: JSON.parse(localStorage.getItem('app_tasks')) || []
         };
 
         function saveData() {
@@ -895,7 +963,6 @@
             }
         }
 
-        // 自動ログインチェック
         window.addEventListener('DOMContentLoaded', () => {
             const remembered = localStorage.getItem('app_remember_user');
             if (remembered) {
@@ -916,7 +983,6 @@
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
             
-            // プロフィール設定の初期値
             document.getElementById('profile-id').value = db.currentUser.id;
             document.getElementById('profile-name').value = db.currentUser.name;
 
@@ -928,7 +994,7 @@
             updateDashboard();
         }
 
-        // --- タブ切り替えシステム (開いているタブを大きくする) ---
+        // --- タブ切り替えシステム ---
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -937,8 +1003,129 @@
             document.getElementById(`nav-${tabName}`).classList.add('active');
         }
 
+        // --- 月間カレンダー機能 ---
+        let calendarYear = new Date().getFullYear();
+        let calendarMonth = new Date().getMonth(); // 0-11
+        let selectedDateStr = null;
+
+        function changeMonth(direction) {
+            calendarMonth += direction;
+            if (calendarMonth > 11) {
+                calendarMonth = 0;
+                calendarYear++;
+            } else if (calendarMonth < 0) {
+                calendarMonth = 11;
+                calendarYear--;
+            }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            document.getElementById('calendar-month-label').innerText = `${calendarYear}年 ${calendarMonth + 1}月`;
+            const grid = document.getElementById('calendar-grid-days');
+            grid.innerHTML = '';
+
+            const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+            const lastDay = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+            const prevLastDay = new Date(calendarYear, calendarMonth, 0).getDate();
+
+            const myEvents = db.calendar.filter(e => e.user === db.currentUser.id);
+
+            // 前月の日付
+            for (let i = firstDayIndex; i > 0; i--) {
+                const dayNum = prevLastDay - i + 1;
+                const cell = createDayCell(calendarMonth === 0 ? calendarYear - 1 : calendarYear, calendarMonth === 0 ? 11 : calendarMonth - 1, dayNum, true);
+                grid.appendChild(cell);
+            }
+
+            // 当月の日付
+            for (let i = 1; i <= lastDay; i++) {
+                const cell = createDayCell(calendarYear, calendarMonth, i, false, myEvents);
+                grid.appendChild(cell);
+            }
+
+            // 次月の日付で埋める (42マス構成)
+            const totalCells = grid.children.length;
+            const remaining = totalCells <= 35 ? 35 - totalCells : 42 - totalCells;
+            for (let i = 1; i <= remaining; i++) {
+                const cell = createDayCell(calendarMonth === 11 ? calendarYear + 1 : calendarYear, calendarMonth === 11 ? 0 : calendarMonth + 1, i, true);
+                grid.appendChild(cell);
+            }
+        }
+
+        function createDayCell(year, month, day, isOtherMonth, events = []) {
+            const cell = document.createElement('div');
+            cell.className = `calendar-day ${isOtherMonth ? 'other-month' : ''}`;
+            
+            const mm = String(month + 1).padStart(2, '0');
+            const dd = String(day).padStart(2, '0');
+            const dateStr = `${year}-${mm}-${dd}`;
+
+            if (dateStr === selectedDateStr) {
+                cell.classList.add('selected');
+            }
+
+            cell.innerHTML = `<span>${day}</span>`;
+
+            // イベントがあるかチェック
+            if (!isOtherMonth) {
+                const hasEvent = events.some(e => e.date === dateStr);
+                if (hasEvent) {
+                    const dot = document.createElement('div');
+                    dot.className = 'event-dot';
+                    cell.appendChild(dot);
+                }
+            }
+
+            cell.onclick = () => {
+                selectedDateStr = dateStr;
+                document.getElementById('selected-date-title').innerText = `${year}年${month + 1}月${day}日の予定`;
+                renderCalendar();
+                renderCalendarEventsList();
+            };
+
+            return cell;
+        }
+
+        function addCalendarEvent() {
+            if (!selectedDateStr) {
+                alert('カレンダーから日付を選択してください');
+                return;
+            }
+            const text = document.getElementById('cal-text').value.trim();
+            if (!text) {
+                alert('予定内容を入力してください');
+                return;
+            }
+            db.calendar.push({ user: db.currentUser.id, date: selectedDateStr, text });
+            saveData();
+            document.getElementById('cal-text').value = '';
+            renderCalendar();
+            renderCalendarEventsList();
+        }
+
+        function renderCalendarEventsList() {
+            const list = document.getElementById('calendar-event-list');
+            list.innerHTML = '';
+            if (!selectedDateStr) return;
+
+            const dayEvents = db.calendar.filter(e => e.user === db.currentUser.id && e.date === selectedDateStr);
+            if (dayEvents.length === 0) {
+                list.innerHTML = `<div style="font-size: 13px; color: var(--text-secondary); text-align: center;">この日の予定はありません</div>`;
+                return;
+            }
+
+            dayEvents.forEach(e => {
+                const item = document.createElement('div');
+                item.className = 'post-card';
+                item.style.padding = '10px 14px';
+                item.innerHTML = `<span style="font-size: 13px;">${e.text}</span>`;
+                list.appendChild(item);
+            });
+        }
+
         // --- トーク画面・機能 ---
-        let currentTalkTab = 'requests'; // requests, friends, groups
+        let currentTalkTab = 'requests';
 
         function switchTalkHeader(headerType) {
             currentTalkTab = headerType;
@@ -954,7 +1141,6 @@
             const query = document.getElementById('talk-search-input').value.toLowerCase();
 
             if (currentTalkTab === 'requests') {
-                // 自分宛ての未承認リクエスト
                 const reqs = db.friendRequests.filter(r => r.to === myId && r.status === 'pending');
                 if (reqs.length === 0) {
                     container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">未承認のリクエストはありません</div>`;
@@ -970,13 +1156,12 @@
                             <p>合言葉: ${r.keyword}</p>
                         </div>
                         <div class="list-item-action">
-                            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="acceptFriendRequest('${r.from}', '${r.keyword}')">承認</button>
+                            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="acceptFriendRequest('${r.from}')">承認</button>
                         </div>
                     `;
                     container.appendChild(item);
                 });
             } else if (currentTalkTab === 'friends') {
-                // 友達リスト
                 const myFriendIds = db.friends
                     .filter(f => f.user1 === myId || f.user2 === myId)
                     .map(f => f.user1 === myId ? f.user2 : f.user1);
@@ -1004,7 +1189,6 @@
                     container.appendChild(item);
                 });
             } else if (currentTalkTab === 'groups') {
-                // グループリスト
                 const myGroups = db.groups.filter(g => g.members.includes(myId) && g.name.toLowerCase().includes(query));
                 if (myGroups.length === 0) {
                     container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 13px;">参加しているグループはありません</div>`;
@@ -1033,7 +1217,7 @@
             renderTalkList();
         }
 
-        // --- 追加モーダル操作 ---
+        // --- 追加モーダル ---
         function openAddMenuModal() { document.getElementById('modal-add-menu').classList.remove('hidden'); }
         function openFriendRequestModal() {
             closeAllModals();
@@ -1066,7 +1250,6 @@
                 return;
             }
 
-            // 既に友達かチェック
             const alreadyFriend = db.friends.find(f => (f.user1 === myId && f.user2 === targetId) || (f.user1 === targetId && f.user2 === myId));
             if (alreadyFriend) {
                 alert('すでに友達登録されています');
@@ -1081,7 +1264,7 @@
             document.getElementById('req-keyword').value = '';
         }
 
-        function acceptFriendRequest(fromId, keyword) {
+        function acceptFriendRequest(fromId) {
             const myId = db.currentUser.id;
             const req = db.friendRequests.find(r => r.from === fromId && r.to === myId && r.status === 'pending');
             if (req) {
@@ -1113,8 +1296,8 @@
             alert('グループを作成しました');
         }
 
-        // --- チャット機能 ---
-        let currentChatType = null; // 'private' or 'group'
+        // --- チャット ---
+        let currentChatType = null;
         let currentChatTargetId = null;
 
         function openChatRoom(type, targetId, targetName) {
@@ -1187,39 +1370,7 @@
             renderChatMessages();
         }
 
-        // --- カレンダー機能 ---
-        function addCalendarEvent() {
-            const date = document.getElementById('cal-date').value;
-            const text = document.getElementById('cal-text').value.trim();
-            if (!date || !text) {
-                alert('日付と予定内容を入力してください');
-                return;
-            }
-            db.calendar.push({ user: db.currentUser.id, date, text });
-            saveData();
-            document.getElementById('cal-date').value = '';
-            document.getElementById('cal-text').value = '';
-            renderCalendar();
-        }
-
-        function renderCalendar() {
-            const list = document.getElementById('calendar-event-list');
-            list.innerHTML = '';
-            const myEvents = db.calendar.filter(e => e.user === db.currentUser.id);
-            if (myEvents.length === 0) {
-                list.innerHTML = `<div style="font-size: 13px; color: var(--text-secondary); text-align: center;">予定はありません</div>`;
-                return;
-            }
-            myEvents.sort((a,b) => new Date(a.date) - new Date(b.date));
-            myEvents.forEach(e => {
-                const item = document.createElement('div');
-                item.className = 'event-item';
-                item.innerHTML = `<span><strong>${e.date}</strong>: ${e.text}</span>`;
-                list.appendChild(item);
-            });
-        }
-
-        // --- メインタブ & プロフィール ---
+        // --- メイン & プロフィール ---
         function updateDashboard() {
             const myId = db.currentUser.id;
             const friendCount = db.friends.filter(f => f.user1 === myId || f.user2 === myId).length;
@@ -1243,7 +1394,6 @@
                 db.currentUser.pass = pass;
             }
 
-            // users配列側も更新
             const userInDb = db.users.find(u => u.id === db.currentUser.id);
             if (userInDb) {
                 userInDb.name = name;
@@ -1254,7 +1404,7 @@
             alert('プロフィールを更新しました');
         }
 
-        // --- 掲示板機能 ---
+        // --- 掲示板 ---
         function createBulletinPost() {
             const text = document.getElementById('bulletin-text').value.trim();
             if (!text) return;
@@ -1291,7 +1441,7 @@
             });
         }
 
-        // --- FOCUS機能 (集中タイマー & タスク) ---
+        // --- FOCUS ---
         let timerInterval = null;
         let timerSeconds = 25 * 60;
         let isTimerRunning = false;
