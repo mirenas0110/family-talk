@@ -1,2078 +1,703 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minimal Family & Study App</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --bg-color: #f7f6f3;
-      --surface-color: #ffffff;
-      --border-color: #e2ded5;
-      --border-dark: #d0cbc0;
-      --text-main: #383634;
-      --text-muted: #7c766e;
-      --accent: #5a554e;
-      --bubble-me: #eae5dc;
-      --bubble-other: #ffffff;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .app-container {
-      width: 100%;
-      max-width: 480px;
-      height: 100%;
-      background: var(--surface-color);
-      display: flex;
-      flex-direction: column;
-      border-left: 1px solid var(--border-color);
-      border-right: 1px solid var(--border-color);
-      position: relative;
-    }
-
-    .header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--surface-color);
-    }
-
-    .header h1 {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 1px;
-    }
-
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      display: none;
-      flex-direction: column;
-      background: var(--bg-color);
-    }
-
-    .content.active {
-      display: flex;
-    }
-
-    /* ボトムナビゲーション */
-    .nav-bar {
-      height: 64px;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      background: var(--surface-color);
-      z-index: 10;
-    }
-
-    .nav-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 10px;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      transition: color 0.15s;
-      text-transform: uppercase;
-    }
-
-    .nav-btn.active {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    /* ================= TALK MODULE ================= */
-    .talk-header {
-      background: var(--surface-color);
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .search-box {
-      width: 100%;
-      padding: 10px 14px;
-      font-size: 14px;
-      border: 1px solid var(--border-dark);
-      border-radius: 6px;
-      background: var(--bg-color);
-      color: var(--text-main);
-      margin-bottom: 10px;
-      outline: none;
-    }
-
-    .talk-tabs {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-    }
-
-    .talk-tab {
-      padding: 5px 10px;
-      font-size: 11px;
-      border: 1px solid var(--border-dark);
-      background: var(--surface-color);
-      border-radius: 4px;
-      cursor: pointer;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    .talk-tab.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-
-    .chat-room-item {
-      background: var(--surface-color);
-      padding: 12px 16px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      cursor: pointer;
-      transition: background 0.1s;
-    }
-    .chat-room-item:hover {
-      background: #faf9f6;
-    }
-
-    .friend-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .avatar-wrapper {
-      position: relative;
-      width: 36px;
-      height: 36px;
-      background: var(--border-color);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      overflow: hidden;
-    }
-    .avatar-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .chat-messages {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .msg-wrapper {
-      display: flex;
-      flex-direction: column;
-      max-width: 85%;
-    }
-    .msg-wrapper.me { align-self: flex-end; align-items: flex-end; }
-    .msg-wrapper.other { align-self: flex-start; align-items: flex-start; }
-
-    .msg-sender {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 3px;
-      font-weight: 600;
-    }
-
-    .msg-bubble {
-      padding: 10px 14px;
-      font-size: 14px;
-      line-height: 1.6;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      word-break: break-all;
-    }
-    .me .msg-bubble { background: var(--bubble-me); border-color: var(--border-dark); }
-    .other .msg-bubble { background: var(--bubble-other); }
-
-    .stamp-msg {
-      font-size: 32px;
-      padding: 4px;
-      background: none;
-      border: none;
-    }
-
-    .chat-input-area {
-      padding: 12px 16px;
-      background: var(--surface-color);
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .chat-input {
-      flex: 1;
-      padding: 10px 14px;
-      font-size: 14px;
-      border: 1px solid var(--border-dark);
-      border-radius: 6px;
-      background: var(--bg-color);
-      outline: none;
-    }
-
-    .chat-send-btn {
-      padding: 10px 16px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    /* タイピングインジケータ */
-    .typing-indicator {
-      display: flex;
-      gap: 4px;
-      padding: 8px 12px;
-      background: var(--surface-color);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      width: fit-content;
-      align-items: center;
-    }
-    .typing-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--text-muted);
-      border-radius: 50%;
-      animation: bounce 1.4s infinite ease-in-out both;
-    }
-    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1.0); }
-    }
-
-    /* ================= CALENDAR MODULE ================= */
-    .cal-header {
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--surface-color);
-      border-bottom: 1px solid var(--border-color);
-      gap: 8px;
-    }
-
-    .cal-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .icon-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .cal-select {
-      padding: 6px 10px;
-      font-size: 13px;
-      border: 1px solid var(--border-dark);
-      border-radius: 6px;
-      background: var(--bg-color);
-      color: var(--text-main);
-      outline: none;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .cal-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 1px;
-      background: var(--border-color);
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .cal-day-name {
-      background: var(--surface-color);
-      text-align: center;
-      font-size: 11px;
-      padding: 8px 0;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .cal-cell {
-      background: var(--surface-color);
-      min-height: 75px;
-      padding: 6px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .cal-date-num { font-size: 12px; font-weight: 600; }
-    .cal-event-dot {
-      font-size: 10px;
-      padding: 2px 4px;
-      border-radius: 3px;
-      background: var(--bubble-me);
-      color: var(--text-main);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .day-detail-panel {
-      padding: 16px;
-      background: var(--surface-color);
-      flex: 1;
-      border-top: 1px solid var(--border-color);
-      overflow-y: auto;
-    }
-
-    /* ================= FOCUS MODULE ================= */
-    .focus-container {
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      text-align: center;
-    }
-
-    .focus-mode-switcher {
-      display: flex;
-      gap: 8px;
-      background: var(--surface-color);
-      padding: 4px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-    }
-
-    .mode-btn {
-      padding: 6px 14px;
-      font-size: 12px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      border-radius: 4px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .mode-btn.active {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    .timer-display {
-      font-size: 48px;
-      font-weight: 300;
-      letter-spacing: 2px;
-      margin: 2px 0;
-    }
-
-    .timer-settings-box {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-      max-width: 280px;
-      background: var(--surface-color);
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-
-    .preset-buttons {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
-    }
-
-    .preset-btn {
-      padding: 4px 8px;
-      font-size: 11px;
-      background: var(--bg-color);
-      border: 1px solid var(--border-dark);
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .timer-controls {
-      display: flex;
-      gap: 12px;
-      width: 100%;
-      max-width: 280px;
-    }
-
-    .timer-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid var(--border-dark);
-    }
-
-    .btn-start { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn-reset { background: var(--surface-color); color: var(--text-main); }
-
-    /* ================= BOARD MODULE ================= */
-    .board-container {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .board-card {
-      background: var(--surface-color);
-      padding: 16px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      font-size: 14px;
-      line-height: 1.5;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .tag-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      font-size: 10px;
-      background: var(--bg-color);
-      border: 1px solid var(--border-dark);
-      border-radius: 4px;
-      color: var(--text-muted);
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .tag-badge:hover {
-      background: var(--border-color);
-      color: var(--text-main);
-    }
-
-    /* ================= MY PAGE MODULE ================= */
-    .mypage-container {
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      text-align: center;
-    }
-
-    .profile-card {
-      background: var(--surface-color);
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      width: 100%;
-      max-width: 320px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      text-align: left;
-    }
-
-    .menu-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      max-width: 320px;
-    }
-
-    .menu-item {
-      padding: 14px 16px;
-      background: var(--surface-color);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .menu-item:hover { background: #faf9f6; }
-
-    /* サブ画面 / モーダル */
-    .sub-screen {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: var(--surface-color);
-      display: none;
-      flex-direction: column;
-      z-index: 50;
-    }
-    .sub-screen.active {
-      display: flex;
-    }
-
-    .modal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 200;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: var(--surface-color);
-      width: 100%;
-      max-width: 340px;
-      padding: 24px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      text-align: center;
-    }
-
-    /* ログイン画面 */
-    #login-screen {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: var(--surface-color);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 500;
-      padding: 30px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Family & Study App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar for desktop app feel */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
-<body>
+<body class="bg-slate-900 h-screen w-screen overflow-hidden flex items-center justify-center p-2 sm:p-6">
 
-  <!-- ログイン画面 -->
-  <div id="login-screen">
-    <div style="width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 12px; text-align: left;">
-      <h2 style="font-size: 18px; text-align: center; margin-bottom: 4px;">ログイン</h2>
-      
-      <div style="font-size: 12px; color: var(--text-muted);">ログインID</div>
-      <input type="text" id="login-id-input" class="search-box" placeholder="IDを入力..." style="margin:0;">
-
-      <div style="font-size: 12px; color: var(--text-muted);">ログイン用PW</div>
-      <input type="password" id="login-password-input" class="search-box" placeholder="パスワードを入力..." style="margin:0;">
-
-      <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
-        <input type="checkbox" id="login-keep-check" checked>
-        <label for="login-keep-check" style="font-size: 13px; cursor: pointer;">ログインしたままにする</label>
-      </div>
-
-      <div style="display: flex; gap: 8px; margin-top: 4px;">
-        <button class="timer-btn btn-start" style="flex: 1;" onclick="tryLogin()">ログイン</button>
-        <button class="timer-btn btn-reset" style="flex: 1;" onclick="openRegisterModal()">新規登録</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="app-container">
-
-    <!-- 1. CALENDAR MODULE -->
-    <div id="tab-calendar" class="content">
-      <div class="cal-header">
-        <div class="cal-controls">
-          <button class="icon-btn" onclick="changeMonth(-1)">◀</button>
-          <select id="cal-month-select" class="cal-select" onchange="onMonthSelectChanged()">
-            <!-- 動的に生成されます -->
-          </select>
-        </div>
-        <div style="display: flex; gap: 6px;">
-          <button class="icon-btn" style="font-size: 11px; padding: 0 8px; width: auto;" onclick="openTagManagerModal('カレンダー')">🏷️ タグ編集</button>
-          <button class="icon-btn" onclick="openEventModal()">＋</button>
-        </div>
-      </div>
-      <div class="cal-grid" id="cal-grid">
-        <div class="cal-day-name">日</div><div class="cal-day-name">月</div><div class="cal-day-name">火</div>
-        <div class="cal-day-name">水</div><div class="cal-day-name">木</div><div class="cal-day-name">金</div><div class="cal-day-name">土</div>
-      </div>
-      <div class="day-detail-panel" id="day-detail-panel">
-        <h3 id="selected-date-title" style="font-size: 14px; margin-bottom: 8px; font-weight: 600;">日付を選択してください</h3>
-        <div id="selected-date-events" style="font-size: 13px; color: var(--text-muted);">予定はありません</div>
-      </div>
-    </div>
-
-    <!-- 2. TALK MODULE -->
-    <div id="tab-talk" class="content">
-      <div class="talk-header">
-        <input type="text" id="global-search" class="search-box" placeholder="メッセージや友達を検索..." oninput="filterTalkContent()">
-        <div class="talk-tabs">
-          <button class="talk-tab active" onclick="switchTalkSubTab('all', this)">全体チャット</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('unapproved', this)">未承認</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('friends', this)">個別チャット</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('groups', this)">グループ</button>
-          <button class="talk-tab" onclick="switchTalkSubTab('add', this)">＋ 友達追加</button>
-        </div>
-      </div>
-      
-      <div id="talk-body-area" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
-        <!-- 動的切り替え -->
-      </div>
-    </div>
-
-    <!-- 3. MY PAGE MODULE (初期表示) -->
-    <div id="tab-mypage" class="content active">
-      <div class="header">
-        <h1>MY PAGE</h1>
-        <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openSettingsModal()">⚙️</button>
-      </div>
-      <div class="mypage-container">
-        <!-- プロフィール概要カード -->
-        <div class="profile-card">
-          <div class="avatar-wrapper" id="display-avatar-wrapper" style="width: 50px; height: 50px; flex-shrink: 0;">
-            <span id="display-avatar-initial">ゲ</span>
-          </div>
-          <div style="flex: 1; overflow: hidden;">
-            <div style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="display-name">ゲストユーザー</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top:2px;">ID: <span id="display-myid">not set</span></div>
-          </div>
-          <button class="timer-btn btn-start" style="padding: 6px 10px; font-size: 11px; flex:none;" onclick="openAccountEditScreen()">編集</button>
-        </div>
-
-        <div class="menu-list">
-          <div class="menu-item" onclick="openTagManagerModal('設定')"><span>🏷️ タグの追加・削除</span><span>›</span></div>
-          <div class="menu-item" onclick="openFocusHistoryScreen()"><span>FOCUS 記録一覧</span><span>›</span></div>
-          <div class="menu-item" onclick="openGameModal('fortune')"><span>今日の運勢を占う</span><span>›</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- アカウント編集画面 -->
-    <div id="sub-screen-account" class="sub-screen">
-      <div class="header">
-        <h1>アカウント編集</h1>
-        <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="closeAccountEditScreen()">✕</button>
-      </div>
-      <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px; overflow-y:auto; flex:1;">
+    <!-- PC Window Shell -->
+    <div id="app-window" class="w-full max-w-6xl h-full max-h-[850px] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-700">
         
-        <div style="font-size: 12px; color: var(--text-muted);">プロフィール画像</div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div class="avatar-wrapper" id="edit-avatar-preview" style="width: 48px; height: 48px;">
-            <span>ゲ</span>
-          </div>
-          <input type="file" id="edit-avatar-file" accept="image/*" class="search-box" style="margin:0; padding:6px;" onchange="previewAvatarImage(event)">
+        <!-- Window Titlebar -->
+        <div class="bg-slate-800 text-slate-300 px-4 py-2.5 flex items-center justify-between select-none shrink-0">
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 rounded-full bg-rose-500 inline-block cursor-pointer" title="Close"></div>
+                <div class="w-3 h-3 rounded-full bg-amber-500 inline-block cursor-pointer" title="Minimize"></div>
+                <div class="w-3 h-3 rounded-full bg-emerald-500 inline-block cursor-pointer" title="Maximize"></div>
+                <span class="text-xs font-medium ml-2 text-slate-400">Minimal Family & Study Desktop v2.4</span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-slate-400">
+                <span id="window-user-status">未ログイン</span>
+                <i class="fa-solid fa-window-maximize hover:text-white cursor-pointer transition"></i>
+            </div>
         </div>
 
-        <div style="font-size: 12px; color: var(--text-muted);">マイID (ログインID)</div>
-        <input type="text" id="edit-myid" class="search-box" style="margin:0;">
-
-        <div style="font-size: 12px; color: var(--text-muted);">ニックネーム</div>
-        <input type="text" id="edit-name" class="search-box" style="margin:0;">
-
-        <div style="font-size: 12px; color: var(--text-muted);">合言葉 (フレンド検索用)</div>
-        <input type="text" id="edit-passphrase" class="search-box" style="margin:0;">
-
-        <div style="font-size: 12px; color: var(--text-muted);">ログイン用PW</div>
-        <input type="password" id="edit-login-password" class="search-box" style="margin:0;">
-
-        <button class="timer-btn btn-start" style="margin-top: 10px;" onclick="saveAccountSettings()">保存する</button>
-      </div>
-    </div>
-
-    <!-- FOCUS 記録一覧画面 -->
-    <div id="sub-screen-focushistory" class="sub-screen">
-      <div class="header">
-        <h1>FOCUS 記録一覧</h1>
-        <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="closeFocusHistoryScreen()">✕</button>
-      </div>
-      <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y:auto; flex:1;" id="focus-history-list">
-        <!-- 履歴カードが動的に挿入されます -->
-      </div>
-    </div>
-
-    <!-- 4. BOARD MODULE -->
-    <div id="tab-board" class="content">
-      <div class="header">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <h1 id="board-header-title">BOARD</h1>
-          <button id="board-clear-filter-btn" class="tag-badge" style="display:none;" onclick="clearBoardTagFilter()">✕ 絞り込み解除</button>
+        <!-- Main Workspace Container -->
+        <div id="main-container" class="flex-1 flex overflow-hidden relative">
+            <!-- Dynamic views injected here -->
         </div>
-        <div style="display: flex; gap: 6px;">
-          <button class="icon-btn" style="font-size: 11px; padding: 0 8px; width: auto;" onclick="openTagManagerModal('掲示板')">🏷️ タグ編集</button>
-          <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openBoardPostModal()">＋</button>
+    </div>
+
+    <!-- Message Box Modal (Custom Alert Replacement) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl transform transition-all scale-100">
+            <h3 id="modal-title" class="text-lg font-bold text-slate-800 mb-2">通知</h3>
+            <p id="modal-message" class="text-sm text-slate-600 mb-6">メッセージ内容</p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">OK</button>
+            </div>
         </div>
-      </div>
-      <div class="board-container" id="board-container">
-        <!-- 掲示板アイテムが動きます -->
-      </div>
     </div>
 
-    <!-- 5. FOCUS MODULE -->
-    <div id="tab-focus" class="content">
-      <div class="header">
-        <h1>FOCUS</h1>
-        <div style="display: flex; gap: 6px;">
-          <button class="icon-btn" style="font-size: 11px; padding: 0 8px; width: auto;" onclick="openTagManagerModal('FOCUS')">🏷️ タグ編集</button>
-          <button class="icon-btn" style="font-size: 11px; padding: 0 8px; width: auto;" onclick="openFocusHistoryScreen()">📋 記録一覧</button>
-        </div>
-      </div>
-      <div class="focus-container">
-        <div class="focus-mode-switcher">
-          <button class="mode-btn active" id="mode-timer-btn" onclick="switchFocusMode('timer')">タイマー</button>
-          <button class="mode-btn" id="mode-stopwatch-btn" onclick="switchFocusMode('stopwatch')">ストップウォッチ</button>
-        </div>
-
-        <div class="timer-display" id="timer-display">25:00</div>
-
-        <div class="timer-settings-box" id="timer-settings-box">
-          <div style="font-size: 12px; color: var(--text-muted);">時間設定（分）</div>
-          <div style="display: flex; gap: 8px; align-items: center; justify-content: center;">
-            <input type="number" id="custom-minutes" value="25" min="1" max="180" class="chat-input" style="width: 80px; text-align: center;" onchange="updateTimerSettings()">
-            <span style="font-size: 13px;">分</span>
-          </div>
-          <div class="preset-buttons">
-            <button class="preset-btn" onclick="setPresetMinutes(10)">10分</button>
-            <button class="preset-btn" onclick="setPresetMinutes(15)">15分</button>
-            <button class="preset-btn" onclick="setPresetMinutes(25)">25分</button>
-            <button class="preset-btn" onclick="setPresetMinutes(50)">50分</button>
-          </div>
-        </div>
-
-        <div class="timer-controls">
-          <button class="timer-btn btn-start" id="timer-toggle-btn" onclick="toggleFocusAction()">スタート</button>
-          <button class="timer-btn btn-reset" onclick="resetFocusAction()">リセット</button>
-        </div>
-
-        <div style="width: 100%; max-width: 280px; background: var(--surface-color); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; text-align: left; margin-top: 6px;">
-          <div style="font-size: 12px; color: var(--text-muted);">現在のFOCUSタグ一覧</div>
-          <div id="focus-tags-list" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ボトムナビゲーション -->
-    <nav class="nav-bar" id="main-nav-bar">
-      <button class="nav-btn" onclick="switchTab('calendar', this)">Calendar</button>
-      <button class="nav-btn" onclick="switchTab('talk', this)">Talk</button>
-      <button class="nav-btn active" onclick="switchTab('mypage', this)">My Page</button>
-      <button class="nav-btn" onclick="switchTab('board', this)">Board</button>
-      <button class="nav-btn" onclick="switchTab('focus', this)">Focus</button>
-    </nav>
-  </div>
-
-  <!-- 新規登録モーダル -->
-  <div class="modal" id="register-modal">
-    <div class="modal-content" style="text-align: left;">
-      <h3 style="font-size: 15px; text-align: center;">新規アカウント登録</h3>
-      
-      <div style="font-size: 12px; color: var(--text-muted);">マイID</div>
-      <input type="text" id="reg-id-input" class="search-box" placeholder="例: user_001" style="margin:0;">
-
-      <div style="font-size: 12px; color: var(--text-muted);">ニックネーム</div>
-      <input type="text" id="reg-name-input" class="search-box" placeholder="例: 山田 太郎" style="margin:0;">
-
-      <div style="font-size: 12px; color: var(--text-muted);">ログイン用PW</div>
-      <input type="password" id="reg-pass-input" class="search-box" placeholder="パスワードを入力..." style="margin:0;">
-
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="timer-btn btn-reset" onclick="closeRegisterModal()">キャンセル</button>
-        <button class="timer-btn btn-start" onclick="saveNewRegister()">登録してログイン</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- タグ管理モーダル (全画面共通) -->
-  <div class="modal" id="tag-manager-modal">
-    <div class="modal-content" style="text-align: left;">
-      <h3 id="tag-manager-title" style="font-size: 15px; text-align: center;">タグの追加・削除</h3>
-      
-      <div style="display: flex; gap: 6px; margin-top: 4px;">
-        <input type="text" id="new-tag-input" class="search-box" placeholder="新しいタグ名を入力..." style="margin:0;">
-        <button class="timer-btn btn-start" style="padding: 0 12px; flex:none;" onclick="addNewTag()">追加</button>
-      </div>
-
-      <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">登録済みタグ一覧</div>
-      <div id="tag-manager-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
-        <!-- 動的リスト -->
-      </div>
-
-      <button class="timer-btn btn-start" style="margin-top: 8px;" onclick="closeTagManagerModal()">完了</button>
-    </div>
-  </div>
-
-  <!-- カレンダー予定追加モーダル -->
-  <div class="modal" id="event-modal">
-    <div class="modal-content" style="text-align: left;">
-      <h3 style="font-size: 15px; text-align: center;">予定の追加</h3>
-      
-      <div style="font-size: 12px; color: var(--text-muted);">日付</div>
-      <input type="date" id="event-date-input" class="search-box" style="margin:0;">
-
-      <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
-        <input type="checkbox" id="event-allday-check" onchange="toggleEventTimeInputs()" checked>
-        <label for="event-allday-check" style="font-size: 13px; cursor: pointer;">終日</label>
-      </div>
-
-      <div id="event-time-area" style="display: none; gap: 8px; align-items: center;">
-        <input type="time" id="event-time-input" class="search-box" style="margin:0;">
-        <span style="font-size: 12px; color: var(--text-muted);">から</span>
-      </div>
-
-      <div style="font-size: 12px; color: var(--text-muted);">タイトル</div>
-      <input type="text" id="event-title-input" class="search-box" placeholder="例: 数学のテスト, 家族会議" style="margin:0;">
-
-      <div style="font-size: 12px; color: var(--text-muted);">メモ</div>
-      <textarea id="event-memo-input" class="search-box" placeholder="詳細や持ち物など..." style="height:60px; margin:0; resize:none;"></textarea>
-
-      <div style="font-size: 12px; color: var(--text-muted);">タグ</div>
-      <select id="event-tag-select" class="search-box" style="margin:0;">
-        <!-- 動的タグリスト -->
-      </select>
-
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="timer-btn btn-reset" onclick="closeEventModal()">キャンセル</button>
-        <button class="timer-btn btn-start" onclick="saveEventModal()">保存する</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FOCUS 終了時記録モーダル -->
-  <div class="modal" id="focus-record-modal">
-    <div class="modal-content">
-      <h3 style="font-size: 15px;">計測完了の記録</h3>
-      <div id="focus-recorded-time" style="font-size: 14px; color: var(--text-muted);"></div>
-      <div style="font-size: 12px; text-align:left; color:var(--text-muted);">タグを選択</div>
-      <select id="focus-record-tag-select" class="search-box" style="margin:0;">
-        <!-- タグオプション -->
-      </select>
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="timer-btn btn-reset" onclick="closeFocusRecordModal(false)">破棄</button>
-        <button class="timer-btn btn-start" onclick="saveFocusRecord(true)">記録する</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 掲示板 / 日記投稿モーダル -->
-  <div class="modal" id="board-post-modal">
-    <div class="modal-content" style="max-width:340px; text-align:left;">
-      <h3 style="font-size: 15px; text-align:center;">掲示板・日記の投稿</h3>
-      <textarea id="board-post-text" class="search-box" placeholder="今日の出来事やメモを入力..." style="height:90px; margin:0; resize:none;"></textarea>
-      
-      <div style="font-size: 12px; color:var(--text-muted);">タグ</div>
-      <select id="board-post-tag-select" class="search-box" style="margin:0;">
-        <!-- 動的タグリスト -->
-      </select>
-
-      <div style="font-size: 12px; color:var(--text-muted);">公開範囲</div>
-      <select id="board-visibility-select" class="search-box" style="margin:0;">
-        <option value="private">自分用（非公開）</option>
-        <option value="family">全体公開</option>
-      </select>
-
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="timer-btn btn-reset" onclick="closeBoardPostModal()">キャンセル</button>
-        <button class="timer-btn btn-start" onclick="saveBoardPost()">投稿する</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- グループ作成モーダル -->
-  <div class="modal" id="group-create-modal">
-    <div class="modal-content" style="max-width: 320px; text-align:left;">
-      <h3 style="font-size: 15px; text-align:center;">グループの作成</h3>
-      <div style="font-size: 12px; color: var(--text-muted);">グループ名 (タグとしても追加されます)</div>
-      <input type="text" id="group-name-input" class="search-box" placeholder="例: 勉強会, 家族A" style="margin:0;">
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="timer-btn btn-reset" onclick="closeGroupCreateModal()">キャンセル</button>
-        <button class="timer-btn btn-start" onclick="saveGroupCreate()">作成する</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- スタンプ選択モーダル -->
-  <div class="modal" id="stamp-modal">
-    <div class="modal-content" style="max-width: 280px;">
-      <h3 style="font-size: 15px;">スタンプを選択</h3>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 12px 0;">
-        <button class="stamp-msg" onclick="sendStamp('👍')">👍</button>
-        <button class="stamp-msg" onclick="sendStamp('👏')">👏</button>
-        <button class="stamp-msg" onclick="sendStamp('🔥')">🔥</button>
-        <button class="stamp-msg" onclick="sendStamp('❤️')">❤️</button>
-        <button class="stamp-msg" onclick="sendStamp('🎉')">🎉</button>
-        <button class="stamp-msg" onclick="sendStamp('🤔')">🤔</button>
-        <button class="stamp-msg" onclick="sendStamp('👀')">👀</button>
-        <button class="stamp-msg" onclick="sendStamp('✨')">✨</button>
-      </div>
-      <button class="timer-btn btn-reset" onclick="closeStampModal()">キャンセル</button>
-    </div>
-  </div>
-
-  <!-- ミニゲームモーダル -->
-  <div class="modal" id="game-modal">
-    <div class="modal-content" style="max-width: 320px;">
-      <h3 id="game-title" style="font-size: 15px;">ミニゲーム</h3>
-      <div id="game-body" style="font-size: 14px; color: var(--text-muted);">内容</div>
-      <button class="timer-btn btn-start" style="margin-top:8px;" onclick="closeGameModal()">閉じる</button>
-    </div>
-  </div>
-
-  <!-- 設定モーダル -->
-  <div class="modal" id="settings-modal">
-    <div class="modal-content" style="max-width: 320px; text-align:left;">
-      <h3 style="font-size: 15px; text-align:center;">設定</h3>
-      
-      <div style="font-size: 12px; color: var(--text-muted);">ベースカラー設定</div>
-      <select id="settings-basecolor" class="search-box" style="margin:0;" onchange="changeBaseColor(this.value)">
-        <option value="default">デフォルト (暖色系)</option>
-        <option value="dark">ダークモード風</option>
-        <option value="blue">ブルー系</option>
-        <option value="green">グリーン系</option>
-      </select>
-
-      <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-        <input type="checkbox" id="settings-lock-check" onchange="toggleLockSetting()">
-        <label for="settings-lock-check" style="font-size: 13px; cursor: pointer;">FOCUS記録中にマイページとFOCUS以外開けなくする</label>
-      </div>
-
-      <button class="timer-btn btn-reset" style="margin-top: 12px; color: #d9534f; border-color: #d9534f;" onclick="logoutApp()">ログアウト</button>
-      <button class="timer-btn btn-start" style="margin-top: 6px;" onclick="closeSettingsModal()">閉じる</button>
-    </div>
-  </div>
-
-  <script>
-    let currentTalkSubTab = 'all';
-    let activeChatRoom = null; // 特定のチャット相手（nullなら未選択で入力欄なし）
-    let typingTimeout = null;
-    let otherIsTyping = false;
-
-    let messages = JSON.parse(localStorage.getItem('family_messages')) || [];
-    let directMessages = JSON.parse(localStorage.getItem('family_direct_messages')) || {};
-    let friends = JSON.parse(localStorage.getItem('family_friends')) || [{ id: 'user_friend1', name: '家族の誰か' }];
-    let pendingRequests = JSON.parse(localStorage.getItem('family_pending')) || [];
-    let groups = JSON.parse(localStorage.getItem('family_groups')) || [];
-
-    let mySettings = JSON.parse(localStorage.getItem('family_my_settings')) || {
-      name: 'ゲストユーザー',
-      myId: 'user_' + Math.floor(Math.random() * 1000),
-      passphrase: 'friend_pass_123',
-      loginPassword: 'password123',
-      avatar: '',
-      baseColor: 'default',
-      lockDuringFocus: false
-    };
-
-    let events = JSON.parse(localStorage.getItem('family_events')) || [];
-    let currentCalDate = new Date();
-
-    // FOCUS 関連
-    let focusMode = 'timer';
-    let focusInterval = null;
-    let isFocusRunning = false;
-    let timerTotalSeconds = 25 * 60;
-    let timerLeftSeconds = 25 * 60;
-    let stopwatchSeconds = 0;
-    let elapsedSecondsThisSession = 0;
-
-    let focusTags = JSON.parse(localStorage.getItem('family_focus_tags')) || ['集中', '勉強', '寡黙', '読書', '作業'];
-    let focusRecords = JSON.parse(localStorage.getItem('family_focus_records')) || [];
-
-    // BOARD 関連
-    let boardPosts = JSON.parse(localStorage.getItem('family_board_posts')) || [
-      { id: 1, text: '今日は集中して課題を片付けられた。明日もこの調子で頑張る。', tag: '日記', visibility: 'private', time: '2026/10/15 21:00', author: 'ゲストユーザー' }
-    ];
-    let boardTagFilter = null;
-
-    // 初期適用
-    applyBaseColor(mySettings.baseColor || 'default');
-    updateMyPageUI();
-    renderBoardPosts();
-    renderFocusTagsUI();
-    initCalendarSelect();
-
-    // 自動ログインチェック
-    if (localStorage.getItem('family_logged_in') === 'true') {
-      document.getElementById('login-screen').style.display = 'none';
-    }
-
-    function tryLogin() {
-      const idVal = document.getElementById('login-id-input').value.trim();
-      const pw = document.getElementById('login-password-input').value;
-      const keep = document.getElementById('login-keep-check').checked;
-
-      if ((!idVal || idVal === mySettings.myId) && pw === (mySettings.loginPassword || 'password123')) {
-        if (keep) localStorage.setItem('family_logged_in', 'true');
-        document.getElementById('login-screen').style.display = 'none';
-      } else {
-        alert('ログインIDまたはパスワードが違います');
-      }
-    }
-
-    function openRegisterModal() {
-      document.getElementById('reg-id-input').value = 'user_' + Math.floor(Math.random() * 1000);
-      document.getElementById('reg-name-input').value = '';
-      document.getElementById('reg-pass-input').value = '';
-      document.getElementById('register-modal').style.display = 'flex';
-    }
-
-    function closeRegisterModal() {
-      document.getElementById('register-modal').style.display = 'none';
-    }
-
-    function saveNewRegister() {
-      const id = document.getElementById('reg-id-input').value.trim();
-      const name = document.getElementById('reg-name-input').value.trim();
-      const pw = document.getElementById('reg-pass-input').value;
-
-      if (!id || !name || !pw) {
-        alert('すべての項目を入力してください');
-        return;
-      }
-
-      mySettings.myId = id;
-      mySettings.name = name;
-      mySettings.loginPassword = pw;
-      localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
-      localStorage.setItem('family_logged_in', 'true');
-
-      updateMyPageUI();
-      closeRegisterModal();
-      document.getElementById('login-screen').style.display = 'none';
-      alert('登録が完了しました！');
-    }
-
-    function logoutApp() {
-      localStorage.removeItem('family_logged_in');
-      closeSettingsModal();
-      document.getElementById('login-password-input').value = '';
-      document.getElementById('login-id-input').value = '';
-      document.getElementById('login-screen').style.display = 'flex';
-    }
-
-    function updateMyPageUI() {
-      document.getElementById('display-name').innerText = mySettings.name;
-      document.getElementById('display-myid').innerText = mySettings.myId;
-      
-      const wrapper = document.getElementById('display-avatar-wrapper');
-      if (mySettings.avatar) {
-        wrapper.innerHTML = `<img src="${mySettings.avatar}" alt="avatar">`;
-      } else {
-        wrapper.innerHTML = `<span id="display-avatar-initial">${mySettings.name ? mySettings.name.charAt(0) : 'ゲ'}</span>`;
-      }
-    }
-
-    let tempAvatarBase64 = '';
-
-    function openAccountEditScreen() {
-      document.getElementById('edit-myid').value = mySettings.myId;
-      document.getElementById('edit-name').value = mySettings.name;
-      document.getElementById('edit-passphrase').value = mySettings.passphrase || '';
-      document.getElementById('edit-login-password').value = mySettings.loginPassword || '';
-      document.getElementById('edit-avatar-file').value = '';
-      tempAvatarBase64 = mySettings.avatar;
-
-      const preview = document.getElementById('edit-avatar-preview');
-      if (tempAvatarBase64) {
-        preview.innerHTML = `<img src="${tempAvatarBase64}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">`;
-      } else {
-        preview.innerHTML = `<span>${mySettings.name ? mySettings.name.charAt(0) : 'ゲ'}</span>`;
-      }
-
-      document.getElementById('sub-screen-account').classList.add('active');
-    }
-
-    function closeAccountEditScreen() {
-      document.getElementById('sub-screen-account').classList.remove('active');
-    }
-
-    function previewAvatarImage(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        tempAvatarBase64 = evt.target.result;
-        const preview = document.getElementById('edit-avatar-preview');
-        preview.innerHTML = `<img src="${tempAvatarBase64}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">`;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function saveAccountSettings() {
-      mySettings.myId = document.getElementById('edit-myid').value;
-      mySettings.name = document.getElementById('edit-name').value;
-      mySettings.passphrase = document.getElementById('edit-passphrase').value;
-      mySettings.loginPassword = document.getElementById('edit-login-password').value;
-      mySettings.avatar = tempAvatarBase64;
-
-      localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
-      updateMyPageUI();
-      closeAccountEditScreen();
-      alert('アカウント情報を更新しました！');
-    }
-
-    function openSettingsModal() {
-      document.getElementById('settings-basecolor').value = mySettings.baseColor || 'default';
-      document.getElementById('settings-lock-check').checked = !!mySettings.lockDuringFocus;
-      document.getElementById('settings-modal').style.display = 'flex';
-    }
-
-    function closeSettingsModal() {
-      document.getElementById('settings-modal').style.display = 'none';
-    }
-
-    function changeBaseColor(theme) {
-      mySettings.baseColor = theme;
-      localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
-      applyBaseColor(theme);
-    }
-
-    function applyBaseColor(theme) {
-      const root = document.documentElement;
-      if (theme === 'dark') {
-        root.style.setProperty('--bg-color', '#1a1a1a');
-        root.style.setProperty('--surface-color', '#242424');
-        root.style.setProperty('--border-color', '#333333');
-        root.style.setProperty('--border-dark', '#444444');
-        root.style.setProperty('--text-main', '#e0e0e0');
-        root.style.setProperty('--text-muted', '#a0a0a0');
-        root.style.setProperty('--accent', '#6c757d');
-        root.style.setProperty('--bubble-me', '#3a3a3a');
-        root.style.setProperty('--bubble-other', '#2c2c2c');
-      } else if (theme === 'blue') {
-        root.style.setProperty('--bg-color', '#f0f4f8');
-        root.style.setProperty('--surface-color', '#ffffff');
-        root.style.setProperty('--border-color', '#d9e2ec');
-        root.style.setProperty('--border-dark', '#bcccdc');
-        root.style.setProperty('--text-main', '#102a43');
-        root.style.setProperty('--text-muted', '#486581');
-        root.style.setProperty('--accent', '#334e68');
-        root.style.setProperty('--bubble-me', '#d9e2ec');
-        root.style.setProperty('--bubble-other', '#ffffff');
-      } else if (theme === 'green') {
-        root.style.setProperty('--bg-color', '#f1f8f5');
-        root.style.setProperty('--surface-color', '#ffffff');
-        root.style.setProperty('--border-color', '#d8e6df');
-        root.style.setProperty('--border-dark', '#b8ccc2');
-        root.style.setProperty('--text-main', '#1e3329');
-        root.style.setProperty('--text-muted', '#4d665b');
-        root.style.setProperty('--accent', '#3b6e56');
-        root.style.setProperty('--bubble-me', '#d8e6df');
-        root.style.setProperty('--bubble-other', '#ffffff');
-      } else {
-        root.style.setProperty('--bg-color', '#f7f6f3');
-        root.style.setProperty('--surface-color', '#ffffff');
-        root.style.setProperty('--border-color', '#e2ded5');
-        root.style.setProperty('--border-dark', '#d0cbc0');
-        root.style.setProperty('--text-main', '#383634');
-        root.style.setProperty('--text-muted', '#7c766e');
-        root.style.setProperty('--accent', '#5a554e');
-        root.style.setProperty('--bubble-me', '#eae5dc');
-        root.style.setProperty('--bubble-other', '#ffffff');
-      }
-    }
-
-    function toggleLockSetting() {
-      mySettings.lockDuringFocus = document.getElementById('settings-lock-check').checked;
-      localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
-    }
-
-    function switchTab(tabId, btnElement) {
-      if (isFocusRunning && mySettings.lockDuringFocus) {
-        if (tabId !== 'mypage' && tabId !== 'focus') {
-          alert('FOCUS計測中はマイページとFOCUS以外開けません！');
-          return;
-        }
-      }
-
-      document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById('tab-' + tabId).classList.add('active');
-      btnElement.classList.add('active');
-
-      if (tabId === 'calendar') renderCalendar();
-      if (tabId === 'board') renderBoardPosts();
-      if (tabId === 'talk') renderTalkContent();
-    }
-
-    function switchTalkSubTab(subTab, element) {
-      document.querySelectorAll('.talk-tab').forEach(el => el.classList.remove('active'));
-      element.classList.add('active');
-      currentTalkSubTab = subTab;
-      activeChatRoom = null; // タブ切り替え時は個別ルームをリセット
-      renderTalkContent();
-    }
-
-    function renderTalkContent(filterText = '') {
-      const area = document.getElementById('talk-body-area');
-      
-      if (currentTalkSubTab === 'add') {
-        area.innerHTML = `
-          <div style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
-            <div style="font-size:14px; font-weight:600;">友達をID検索して追加</div>
-            <input type="text" id="search-id-input" class="search-box" placeholder="相手のIDを入力...">
-            <input type="text" id="search-pass-input" class="search-box" placeholder="合言葉を入力...">
-            <button class="timer-btn btn-start" onclick="sendFriendRequest()">承認リクエストを送る</button>
-          </div>
-        `;
-        return;
-      }
-
-      if (currentTalkSubTab === 'groups') {
-        area.innerHTML = `
-          <div style="padding: 16px; display:flex; flex-direction:column; gap:12px; flex:1; overflow-y:auto;">
-            <button class="timer-btn btn-start" onclick="openGroupCreateModal()">＋ グループ作成</button>
-            <div id="groups-list-container" style="display:flex; flex-direction:column; gap:8px;"></div>
-          </div>
-        `;
-        renderGroupsList();
-        return;
-      }
-
-      // 個別チャット（フレンド一覧）タブで、まだルームが選択されていない場合
-      if (currentTalkSubTab === 'friends' && !activeChatRoom) {
-        area.innerHTML = `
-          <div style="padding: 16px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">チャットする相手を選択してください</div>
-            <div id="friend-chat-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-          </div>
-        `;
-        renderFriendChatList();
-        return;
-      }
-
-      // チャット画面（全体チャット または 選択された個別チャットルーム）
-      const chatTitle = activeChatRoom ? `💬 ${activeChatRoom.name}とのチャット` : '💬 全体チャットルーム';
-      
-      area.innerHTML = `
-        <div style="padding: 8px 16px; background:var(--surface-color); border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:13px; font-weight:600;">${chatTitle}</span>
-          ${activeChatRoom ? '<button class="tag-badge" onclick="backToFriendList()">‹ 一覧に戻る</button>' : ''}
-        </div>
-        <div class="chat-messages" id="chat-messages"></div>
-        <div id="typing-container" style="padding: 0 16px; min-height: 24px;"></div>
-        <div class="chat-input-area" id="chat-input-area">
-          <button class="icon-btn" style="width:36px; height:36px; font-size:16px; flex:none;" onclick="openStampModal()" title="スタンプ">😊</button>
-          <input type="text" id="chat-input" class="chat-input" placeholder="メッセージを入力..." oninput="handleTypingInput()" onkeypress="handleKey(event)">
-          <button class="chat-send-btn" onclick="sendMessage()">送信</button>
-        </div>
-      `;
-
-      renderMessages(filterText);
-    }
-
-    function renderFriendChatList() {
-      const container = document.getElementById('friend-chat-list');
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (friends.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center;">まだ友達がいません。「＋ 友達追加」から追加してください。</div>';
-        return;
-      }
-
-      friends.forEach(f => {
-        const item = document.createElement('div');
-        item.className = 'chat-room-item';
-        item.innerHTML = `
-          <div class="friend-info">
-            <div class="avatar-wrapper">${f.name.charAt(0)}</div>
-            <span style="font-size:14px; font-weight:500;">${f.name}</span>
-          </div>
-          <span style="font-size:12px; color:var(--text-muted);">チャットを開く ›</span>
-        `;
-        item.onclick = () => {
-          activeChatRoom = f;
-          renderTalkContent();
+    <script>
+        // Global Application State
+        let currentUser = null;
+        let stayLoggedIn = false;
+        let currentTab = 'dashboard';
+        
+        // Mock Database of users and records
+        let users = JSON.parse(localStorage.getItem('app_users')) || [
+            { id: 'user_dad', name: 'パパ', role: '保護者' },
+            { id: 'user_mom', name: 'ママ', role: '保護者' },
+            { id: 'user_taro', name: '太郎', role: '生徒' }
+        ];
+
+        let focusRecords = JSON.parse(localStorage.getItem('app_focus')) || [
+            { id: 1, user: '太郎', subject: '数学', time: 45, date: '2026-06-07' },
+            { id: 2, user: '太郎', subject: '英語', time: 30, date: '2026-06-06' }
+        ];
+
+        let boardPosts = JSON.parse(localStorage.getItem('app_board')) || [
+            { id: 1, user: 'パパ', tag: '連絡', text: '今週末の予定を確認しておいてね。', time: '10:00' },
+            { id: 2, user: '太郎', tag: '質問', text: '数学の宿題のページ番号がわかりません。', time: '11:15' }
+        ];
+
+        let chatMessages = JSON.parse(localStorage.getItem('app_chats')) || {
+            'パパ': [
+                { sender: 'パパ', text: 'お疲れ様！今日の勉強はどうだった？', time: '12:00', type: 'text' },
+                { sender: '太郎', text: 'がんばってるよ！', time: '12:05', type: 'text' }
+            ],
+            'ママ': [
+                { sender: 'ママ', text: '夕方おやつ置いておくね。', time: '15:00', type: 'text' }
+            ]
         };
-        container.appendChild(item);
-      });
-    }
 
-    function backToFriendList() {
-      activeChatRoom = null;
-      renderTalkContent();
-    }
+        let customTags = JSON.parse(localStorage.getItem('app_tags')) || {
+            calendar: ['テスト', '行事', '部活', 'その他'],
+            focus: ['数学', '英語', '国語', '理科', '社会'],
+            board: ['連絡', '質問', '相談', '雑談']
+        };
 
-    function renderGroupsList() {
-      const container = document.getElementById('groups-list-container');
-      if (!container) return;
-      container.innerHTML = '';
+        let activeChatUser = null;
+        let typingTimeout = null;
 
-      if (groups.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center;">グループはありません</div>';
-        return;
-      }
-
-      groups.forEach(g => {
-        const item = document.createElement('div');
-        item.className = 'board-card';
-        item.innerHTML = `
-          <div style="font-weight:600; font-size:15px;">👥 ${g.name}</div>
-          <div style="font-size:12px; color:var(--text-muted);">メンバー (${g.members ? g.members.length : 1}名)</div>
-        `;
-        container.appendChild(item);
-      });
-    }
-
-    function openGroupCreateModal() {
-      document.getElementById('group-name-input').value = '';
-      document.getElementById('group-create-modal').style.display = 'flex';
-    }
-
-    function closeGroupCreateModal() {
-      document.getElementById('group-create-modal').style.display = 'none';
-    }
-
-    function saveGroupCreate() {
-      const name = document.getElementById('group-name-input').value.trim();
-      if (!name) {
-        alert('グループ名を入力してください');
-        return;
-      }
-
-      groups.push({ id: Date.now(), name: name, members: [mySettings.name] });
-      localStorage.setItem('family_groups', JSON.stringify(groups));
-
-      if (!focusTags.includes(name)) {
-        focusTags.push(name);
-        localStorage.setItem('family_focus_tags', JSON.stringify(focusTags));
-      }
-
-      closeGroupCreateModal();
-      renderGroupsList();
-      alert(`グループ「${name}」を作成しました！`);
-    }
-
-    function renderMessages(filterText = '') {
-      const container = document.getElementById('chat-messages');
-      if (!container) return;
-      container.innerHTML = '';
-      
-      let list = messages;
-      if (activeChatRoom) {
-        const key = activeChatRoom.id;
-        directMessages[key] = directMessages[key] || [];
-        list = directMessages[key];
-      }
-
-      if (list.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">メッセージはまだありません</div>';
-        return;
-      }
-
-      list.forEach(m => {
-        if (filterText && !m.text.includes(filterText)) return;
-        const isMe = m.sender === mySettings.name;
-        const wrapper = document.createElement('div');
-        wrapper.className = `msg-wrapper ${isMe ? 'me' : 'other'}`;
-        
-        const isStamp = m.isStamp;
-        const contentHtml = isStamp ? `<div class="stamp-msg">${m.text}</div>` : `<div class="msg-bubble">${m.text}</div>`;
-
-        wrapper.innerHTML = `
-          <div class="msg-sender">${m.sender}</div>
-          ${contentHtml}
-          <div class="msg-meta" style="font-size:10px; color:var(--text-muted); margin-top:3px;">${m.time}</div>
-        `;
-        container.appendChild(wrapper);
-      });
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function sendMessage(isStamp = false, stampText = '') {
-      const input = document.getElementById('chat-input');
-      const text = isStamp ? stampText : input.value.trim();
-      if (!text) return;
-
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-      
-      const newMsg = {
-        id: Date.now(),
-        sender: mySettings.name,
-        text: text,
-        time: timeStr,
-        isStamp: isStamp
-      };
-
-      if (activeChatRoom) {
-        const key = activeChatRoom.id;
-        directMessages[key] = directMessages[key] || [];
-        directMessages[key].push(newMsg);
-        localStorage.setItem('family_direct_messages', JSON.stringify(directMessages));
-      } else {
-        messages.push(newMsg);
-        localStorage.setItem('family_messages', JSON.stringify(messages));
-      }
-
-      if (!isStamp) input.value = '';
-      renderMessages();
-      triggerSimulatedReply();
-    }
-
-    function handleKey(e) {
-      if (e.key === 'Enter') sendMessage();
-    }
-
-    function handleTypingInput() {
-      // 入力中インジケータ表示のシミュレーション
-      const typingContainer = document.getElementById('typing-container');
-      if (typingContainer && !otherIsTyping) {
-        // ランダムに相手が入力中のふりをする
-        otherIsTyping = true;
-        typingContainer.innerHTML = `
-          <div class="typing-indicator">
-            <span style="font-size:10px; color:var(--text-muted); margin-right:4px;">相手が入力中</span>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-          </div>
-        `;
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-          otherIsTyping = false;
-          if (typingContainer) typingContainer.innerHTML = '';
-        }, 3000);
-      }
-    }
-
-    function triggerSimulatedReply() {
-      setTimeout(() => {
-        const typingContainer = document.getElementById('typing-container');
-        if (typingContainer) typingContainer.innerHTML = '';
-      }, 1500);
-    }
-
-    function openStampModal() {
-      document.getElementById('stamp-modal').style.display = 'flex';
-    }
-
-    function closeStampModal() {
-      document.getElementById('stamp-modal').style.display = 'none';
-    }
-
-    function sendStamp(emoji) {
-      closeStampModal();
-      sendMessage(true, emoji);
-    }
-
-    function filterTalkContent() {
-      const query = document.getElementById('global-search').value;
-      if (currentTalkSubTab === 'all' || activeChatRoom) {
-        renderMessages(query);
-      }
-    }
-
-    function sendFriendRequest() {
-      const targetId = document.getElementById('search-id-input').value.trim();
-      const pass = document.getElementById('search-pass-input').value.trim();
-      if (!targetId || !pass) {
-        alert('IDと合言葉を入力してください');
-        return;
-      }
-      alert('リクエストを送信しました（相手の承認待ちです）');
-      document.getElementById('search-id-input').value = '';
-      document.getElementById('search-pass-input').value = '';
-    }
-
-    function approveFriend(index) {
-      const approved = pendingRequests.splice(index, 1)[0];
-      friends.push({ id: approved.id, name: approved.name });
-      localStorage.setItem('family_pending', JSON.stringify(pendingRequests));
-      localStorage.setItem('family_friends', JSON.stringify(friends));
-      renderTalkContent();
-      alert(`${approved.name} さんを友達に追加しました！`);
-    }
-
-    /* ---------------- TAG MANAGER (全画面共通) ---------------- */
-    let currentTagModule = '';
-
-    function openTagManagerModal(moduleName) {
-      currentTagModule = moduleName;
-      document.getElementById('tag-manager-title').innerText = `${moduleName}: タグの追加・削除`;
-      document.getElementById('new-tag-input').value = '';
-      renderTagManagerList();
-      document.getElementById('tag-manager-modal').style.display = 'flex';
-    }
-
-    function closeTagManagerModal() {
-      document.getElementById('tag-manager-modal').style.display = 'none';
-      renderFocusTagsUI();
-    }
-
-    function renderTagManagerList() {
-      const listContainer = document.getElementById('tag-manager-list');
-      listContainer.innerHTML = '';
-
-      if (focusTags.length === 0) {
-        listContainer.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center;">タグがありません</div>';
-        return;
-      }
-
-      focusTags.forEach((tag, idx) => {
-        const item = document.createElement('div');
-        item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--bg-color); border-radius:4px;';
-        item.innerHTML = `
-          <span style="font-size:13px;"># ${tag}</span>
-          <button class="tag-badge" style="color:#d9534f; border-color:#d9534f;" onclick="deleteTag(${idx})">削除</button>
-        `;
-        listContainer.appendChild(item);
-      });
-    }
-
-    function addNewTag() {
-      const val = document.getElementById('new-tag-input').value.trim();
-      if (!val) return;
-      if (focusTags.includes(val)) {
-        alert('すでに存在するタグです');
-        return;
-      }
-      focusTags.push(val);
-      localStorage.setItem('family_focus_tags', JSON.stringify(focusTags));
-      document.getElementById('new-tag-input').value = '';
-      renderTagManagerList();
-    }
-
-    function deleteTag(index) {
-      if (focusTags.length <= 1) {
-        alert('最低1つのタグが必要です');
-        return;
-      }
-      focusTags.splice(index, 1);
-      localStorage.setItem('family_focus_tags', JSON.stringify(focusTags));
-      renderTagManagerList();
-    }
-
-    /* ---------------- FOCUS ---------------- */
-    function switchFocusMode(mode) {
-      if (isFocusRunning) resetFocusAction();
-      focusMode = mode;
-      
-      document.getElementById('mode-timer-btn').classList.toggle('active', mode === 'timer');
-      document.getElementById('mode-stopwatch-btn').classList.toggle('active', mode === 'stopwatch');
-      document.getElementById('timer-settings-box').style.display = (mode === 'timer') ? 'flex' : 'none';
-
-      if (mode === 'timer') {
-        updateTimerDisplay(timerLeftSeconds);
-      } else {
-        stopwatchSeconds = 0;
-        updateTimerDisplay(0);
-      }
-    }
-
-    function setPresetMinutes(mins) {
-      document.getElementById('custom-minutes').value = mins;
-      updateTimerSettings();
-    }
-
-    function updateTimerSettings() {
-      const mins = parseInt(document.getElementById('custom-minutes').value) || 25;
-      timerTotalSeconds = mins * 60;
-      timerLeftSeconds = timerTotalSeconds;
-      if (!isFocusRunning && focusMode === 'timer') {
-        updateTimerDisplay(timerLeftSeconds);
-      }
-    }
-
-    function updateTimerDisplay(totalSec) {
-      const m = Math.floor(totalSec / 60);
-      const s = totalSec % 60;
-      document.getElementById('timer-display').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }
-
-    function toggleFocusAction() {
-      const btn = document.getElementById('timer-toggle-btn');
-      if (isFocusRunning) {
-        clearInterval(focusInterval);
-        isFocusRunning = false;
-        btn.innerText = 'スタート';
-        
-        if (focusMode === 'timer') {
-          elapsedSecondsThisSession = timerTotalSeconds - timerLeftSeconds;
-        } else {
-          elapsedSecondsThisSession = stopwatchSeconds;
+        function showModal(title, message) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('custom-modal').classList.remove('hidden');
         }
 
-        if (elapsedSecondsThisSession >= 10) {
-          openFocusRecordModal();
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
         }
-      } else {
-        isFocusRunning = true;
-        btn.innerText = '完了・一時停止';
-        
-        focusInterval = setInterval(() => {
-          if (focusMode === 'timer') {
-            if (timerLeftSeconds > 0) {
-              timerLeftSeconds--;
-              updateTimerDisplay(timerLeftSeconds);
-            } else {
-              clearInterval(focusInterval);
-              isFocusRunning = false;
-              btn.innerText = 'スタート';
-              elapsedSecondsThisSession = timerTotalSeconds;
-              openFocusRecordModal();
+
+        function saveData() {
+            localStorage.setItem('app_users', JSON.stringify(users));
+            localStorage.setItem('app_focus', JSON.stringify(focusRecords));
+            localStorage.setItem('app_board', JSON.stringify(boardPosts));
+            localStorage.setItem('app_chats', JSON.stringify(chatMessages));
+            localStorage.setItem('app_tags', JSON.stringify(customTags));
+        }
+
+        function renderLoginView() {
+            const container = document.getElementById('main-container');
+            document.getElementById('window-user-status').innerText = '未ログイン';
+            
+            container.innerHTML = `
+                <div class="flex-1 flex items-center justify-center bg-slate-50 p-6">
+                    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold shadow-inner">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <h1 class="text-2xl font-bold text-slate-800">Family & Study Hub</h1>
+                            <p class="text-sm text-slate-500 mt-1">ログインIDを入力するか、新規登録してください</p>
+                        </div>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">ログインID</label>
+                                <input type="text" id="login-id-input" placeholder="例: user_taro" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm">
+                            </div>
+
+                            <div class="flex items-center justify-between text-sm">
+                                <label class="flex items-center space-x-2 cursor-pointer select-none">
+                                    <input type="checkbox" id="stay-logged-in" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                                    <span class="text-slate-600 font-medium">ログインしたままにする</span>
+                                </label>
+                            </div>
+
+                            <div class="flex space-x-3 pt-2">
+                                <button onclick="handleLogin()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-indigo-200 transition text-sm">
+                                    ログイン
+                                </button>
+                                <button onclick="handleAutoRegisterAndLogin()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-emerald-200 transition text-sm flex items-center justify-center space-x-1.5" title="かぶりのない一意のIDを自動生成して新規登録＆ログイン">
+                                    <i class="fa-solid fa-user-plus text-xs"></i>
+                                    <span>新規登録</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 border-t border-slate-100 pt-4 text-center">
+                            <p class="text-xs text-slate-400">既存ユーザー例: user_dad, user_mom, user_taro</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate unique ID that doesn't conflict with existing users
+        function generateUniqueId() {
+            let newId;
+            let existingIds = users.map(u => u.id);
+            do {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                newId = `user_${randomNum}`;
+            } while (existingIds.includes(newId));
+            return newId;
+        }
+
+        function handleAutoRegisterAndLogin() {
+            const uniqueId = generateUniqueId();
+            const defaultName = `新規ユーザー_${uniqueId.replace('user_', '')}`;
+            
+            // Create new account
+            const newUser = { id: uniqueId, name: defaultName, role: '生徒' };
+            users.push(newUser);
+            saveData();
+
+            // Set as current user & login
+            currentUser = newUser;
+            stayLoggedIn = document.getElementById('stay-logged-in') ? document.getElementById('stay-logged-in').checked : false;
+            
+            showModal('新規登録完了', `一意のID「${uniqueId}」でアカウントを作成し、ログインしました！`);
+            setTimeout(() => {
+                closeModal();
+                renderAppLayout();
+            }, 600);
+        }
+
+        function handleLogin() {
+            const idInput = document.getElementById('login-id-input').value.trim();
+            stayLoggedIn = document.getElementById('stay-logged-in').checked;
+
+            if (!idInput) {
+                showModal('エラー', 'ログインIDを入力してください。');
+                return;
             }
-          } else {
-            stopwatchSeconds++;
-            updateTimerDisplay(stopwatchSeconds);
-          }
-        }, 1000);
-      }
-    }
 
-    function resetFocusAction() {
-      clearInterval(focusInterval);
-      if (isFocusRunning) {
-        if (focusMode === 'timer') {
-          elapsedSecondsThisSession = timerTotalSeconds - timerLeftSeconds;
-        } else {
-          elapsedSecondsThisSession = stopwatchSeconds;
+            const found = users.find(u => u.id === idInput);
+            if (found) {
+                currentUser = found;
+                renderAppLayout();
+            } else {
+                showModal('エラー', '該当するログインIDが見つかりません。新規登録ボタンをお試しください。');
+            }
         }
-        if (elapsedSecondsThisSession >= 10) openFocusRecordModal();
-      }
-      isFocusRunning = false;
-      document.getElementById('timer-toggle-btn').innerText = 'スタート';
-      
-      if (focusMode === 'timer') {
-        timerLeftSeconds = timerTotalSeconds;
-        updateTimerDisplay(timerLeftSeconds);
-      } else {
-        stopwatchSeconds = 0;
-        updateTimerDisplay(0);
-      }
-    }
 
-    function openFocusRecordModal() {
-      const mins = Math.round(elapsedSecondsThisSession / 60);
-      document.getElementById('focus-recorded-time').innerText = `計測時間: 約 ${mins} 分 (${elapsedSecondsThisSession}秒)`;
-      document.getElementById('focus-record-modal').style.display = 'flex';
-      updateFocusRecordTagOptions();
-    }
+        function renderAppLayout() {
+            const container = document.getElementById('main-container');
+            document.getElementById('window-user-status').innerText = `${currentUser.name} (${currentUser.role}) でログイン中`;
 
-    function closeFocusRecordModal(save = false) {
-      document.getElementById('focus-record-modal').style.display = 'none';
-      if (!save) {
-        resetFocusAction();
-      }
-    }
+            container.innerHTML = `
+                <!-- Sidebar Navigation -->
+                <div class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 select-none border-r border-slate-800">
+                    <div>
+                        <div class="p-5 border-b border-slate-800 flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow">
+                                ${currentUser.name.charAt(0)}
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="text-sm font-bold text-white truncate">${currentUser.name}</h4>
+                                <span class="text-xs text-indigo-400 font-medium">${currentUser.role}</span>
+                            </div>
+                        </div>
 
-    function updateFocusRecordTagOptions() {
-      const select = document.getElementById('focus-record-tag-select');
-      select.innerHTML = '';
-      focusTags.forEach(tag => {
-        const opt = document.createElement('option');
-        opt.value = tag;
-        opt.innerText = tag;
-        select.appendChild(opt);
-      });
-    }
+                        <nav class="p-4 space-y-1.5">
+                            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium transition ${currentTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}">
+                                <i class="fa-solid fa-chart-pie w-5"></i>
+                                <span>ダッシュボード</span>
+                            </button>
+                            <button onclick="switchTab('calendar')" id="nav-calendar" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium transition ${currentTab === 'calendar' ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}">
+                                <i class="fa-solid fa-calendar-days w-5"></i>
+                                <span>カレンダー</span>
+                            </button>
+                            <button onclick="switchTab('focus')" id="nav-focus" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium transition ${currentTab === 'focus' ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}">
+                                <i class="fa-solid fa-clock w-5"></i>
+                                <span>FOCUS (勉強記録)</span>
+                            </button>
+                            <button onclick="switchTab('board')" id="nav-board" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium transition ${currentTab === 'board' ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}">
+                                <i class="fa-solid fa-comments w-5"></i>
+                                <span>家族掲示板</span>
+                            </button>
+                            <button onclick="switchTab('chat')" id="nav-chat" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium transition ${currentTab === 'chat' ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-800 text-slate-400 hover:text-white'}">
+                                <i class="fa-solid fa-paper-plane w-5"></i>
+                                <span>ダイレクトチャット</span>
+                            </button>
+                        </nav>
+                    </div>
 
-    function renderFocusTagsUI() {
-      const listContainer = document.getElementById('focus-tags-list');
-      if (!listContainer) return;
-      listContainer.innerHTML = '';
-      focusTags.forEach(tag => {
-        const badge = document.createElement('span');
-        badge.className = 'tag-badge';
-        badge.innerText = `# ${tag}`;
-        listContainer.appendChild(badge);
-      });
-    }
+                    <div class="p-4 border-t border-slate-800 space-y-2">
+                        <button onclick="switchTab('mypage')" class="w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white transition">
+                            <i class="fa-solid fa-gear w-5"></i>
+                            <span>マイページ設定</span>
+                        </button>
+                        <button onclick="logout()" class="w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-sm font-medium hover:bg-rose-500/10 text-rose-400 transition">
+                            <i class="fa-solid fa-right-from-bracket w-5"></i>
+                            <span>ログアウト</span>
+                        </button>
+                    </div>
+                </div>
 
-    function saveFocusRecord() {
-      const tag = document.getElementById('focus-record-tag-select').value || '集中';
-      const mins = Math.max(1, Math.round(elapsedSecondsThisSession / 60));
-      const now = new Date();
-      const dateStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-
-      focusRecords.unshift({
-        id: Date.now(),
-        date: dateStr,
-        minutes: mins,
-        tag: tag
-      });
-      localStorage.setItem('family_focus_records', JSON.stringify(focusRecords));
-      closeFocusRecordModal(true);
-      resetFocusAction();
-      alert('FOCUSの記録を保存しました！');
-    }
-
-    function openFocusHistoryScreen() {
-      const listContainer = document.getElementById('focus-history-list');
-      listContainer.innerHTML = '';
-
-      if (focusRecords.length === 0) {
-        listContainer.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">まだ記録はありません</div>';
-      } else {
-        focusRecords.forEach((rec, idx) => {
-          const item = document.createElement('div');
-          item.className = 'board-card';
-          item.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span class="tag-badge"># ${rec.tag}</span>
-              <div style="display:flex; gap:8px; align-items:center;">
-                <span style="font-size:11px; color:var(--text-muted);">${rec.date}</span>
-                <button class="tag-badge" style="color:#d9534f; border-color:#d9534f;" onclick="deleteFocusRecord(${idx})">削除</button>
-              </div>
-            </div>
-            <div style="font-size:16px; font-weight:600; margin-top:4px;">${rec.minutes} 分の集中</div>
-          `;
-          listContainer.appendChild(item);
-        });
-      }
-      document.getElementById('sub-screen-focushistory').classList.add('active');
-    }
-
-    function closeFocusHistoryScreen() {
-      document.getElementById('sub-screen-focushistory').classList.remove('active');
-    }
-
-    function deleteFocusRecord(index) {
-      focusRecords.splice(index, 1);
-      localStorage.setItem('family_focus_records', JSON.stringify(focusRecords));
-      openFocusHistoryScreen(); // 再描画
-    }
-
-    /* ---------------- BOARD ---------------- */
-    function renderBoardPosts() {
-      const container = document.getElementById('board-container');
-      container.innerHTML = '';
-
-      const clearBtn = document.getElementById('board-clear-filter-btn');
-      const titleElem = document.getElementById('board-header-title');
-
-      let filtered = boardPosts;
-      if (boardTagFilter) {
-        filtered = boardPosts.filter(p => p.tag === boardTagFilter && (p.author === mySettings.name || p.visibility === 'family'));
-        titleElem.innerText = `BOARD (#${boardTagFilter})`;
-        clearBtn.style.display = 'inline-block';
-      } else {
-        titleElem.innerText = 'BOARD';
-        clearBtn.style.display = 'none';
-      }
-
-      if (filtered.length === 0) {
-        container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">投稿はありません</div>';
-        return;
-      }
-
-      filtered.forEach(post => {
-        const item = document.createElement('div');
-        item.className = 'board-card';
-        
-        let visibilityLabel = '全体公開';
-        if (post.visibility === 'private') visibilityLabel = '🔒 自分用';
-        else if (post.visibility !== 'family') visibilityLabel = `👥 ${post.visibility}`;
-
-        item.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; gap:6px; align-items:center;">
-              <span class="tag-badge" onclick="filterBoardByTag('${post.tag}')"># ${post.tag || 'メモ'}</span>
-              <span style="font-size:10px; padding:2px 6px; background:#e2ded5; border-radius:3px; color:var(--text-muted);">${visibilityLabel}</span>
-            </div>
-            <span style="font-size:11px; color:var(--text-muted);">${post.time} (${post.author})</span>
-          </div>
-          <div style="font-size:14px; white-space:pre-wrap; margin-top:4px;">${post.text}</div>
-        `;
-        container.appendChild(item);
-      });
-    }
-
-    function filterBoardByTag(tag) {
-      boardTagFilter = tag;
-      renderBoardPosts();
-    }
-
-    function clearBoardTagFilter() {
-      boardTagFilter = null;
-      renderBoardPosts();
-    }
-
-    function openBoardPostModal() {
-      document.getElementById('board-post-text').value = '';
-      
-      const select = document.getElementById('board-post-tag-select');
-      select.innerHTML = '';
-      focusTags.forEach(tag => {
-        const opt = document.createElement('option');
-        opt.value = tag;
-        opt.innerText = tag;
-        select.appendChild(opt);
-      });
-
-      const visSelect = document.getElementById('board-visibility-select');
-      visSelect.innerHTML = `
-        <option value="private">自分用（非公開）</option>
-        <option value="family">全体公開</option>
-      `;
-      groups.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g.name;
-        opt.innerText = `グループ: ${g.name}`;
-        visSelect.appendChild(opt);
-      });
-
-      document.getElementById('board-post-modal').style.display = 'flex';
-    }
-
-    function closeBoardPostModal() {
-      document.getElementById('board-post-modal').style.display = 'none';
-    }
-
-    function saveBoardPost() {
-      const text = document.getElementById('board-post-text').value.trim();
-      const tag = document.getElementById('board-post-tag-select').value || '日記';
-      const visibility = document.getElementById('board-visibility-select').value;
-      if (!text) {
-        alert('内容を入力してください');
-        return;
-      }
-
-      const now = new Date();
-      const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-
-      boardPosts.unshift({
-        id: Date.now(),
-        text: text,
-        tag: tag,
-        visibility: visibility,
-        time: timeStr,
-        author: mySettings.name
-      });
-      localStorage.setItem('family_board_posts', JSON.stringify(boardPosts));
-      closeBoardPostModal();
-      renderBoardPosts();
-      alert('掲示板に投稿しました！');
-    }
-
-    /* ---------------- CALENDAR ---------------- */
-    function initCalendarSelect() {
-      const select = document.getElementById('cal-month-select');
-      select.innerHTML = '';
-      
-      const y = currentCalDate.getFullYear();
-      const m = currentCalDate.getMonth();
-
-      for (let i = -6; i <= 12; i++) {
-        const d = new Date(y, m + i, 1);
-        const year = d.getFullYear();
-        const month = d.getMonth() + 1;
-        const val = `${year}-${String(month).padStart(2, '0')}`;
-        
-        const opt = document.createElement('option');
-        opt.value = val;
-        opt.innerText = `${year}年 ${month}月`;
-        select.appendChild(opt);
-      }
-      syncCalendarSelect();
-    }
-
-    function syncCalendarSelect() {
-      const year = currentCalDate.getFullYear();
-      const month = currentCalDate.getMonth() + 1;
-      const val = `${year}-${String(month).padStart(2, '0')}`;
-      const select = document.getElementById('cal-month-select');
-      
-      let found = false;
-      for (let opt of select.options) {
-        if (opt.value === val) {
-          found = true;
-          break;
+                <!-- Main Content Panel -->
+                <div id="content-panel" class="flex-1 bg-slate-100 flex flex-col overflow-y-auto">
+                    <!-- Tab content rendered dynamically -->
+                </div>
+            `;
+            renderTabContent();
         }
-      }
-      if (!found) {
-        const opt = document.createElement('option');
-        opt.value = val;
-        opt.innerText = `${year}年 ${month}月`;
-        select.appendChild(opt);
-      }
-      select.value = val;
-    }
 
-    function changeMonth(diff) {
-      currentCalDate.setMonth(currentCalDate.getMonth() + diff);
-      syncCalendarSelect();
-      renderCalendar();
-    }
+        function switchTab(tab) {
+            currentTab = tab;
+            // update nav highlights
+            ['dashboard', 'calendar', 'focus', 'board', 'chat', 'mypage'].forEach(t => {
+                const btn = document.getElementById(`nav-${t}`);
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = "w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white shadow-md transition";
+                    } else {
+                        btn.className = "w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white transition";
+                    }
+                }
+            });
+            renderTabContent();
+        }
 
-    function onMonthSelectChanged() {
-      const val = document.getElementById('cal-month-select').value;
-      const [year, month] = val.split('-').map(Number);
-      currentCalDate.setFullYear(year);
-      currentCalDate.setMonth(month - 1);
-      renderCalendar();
-    }
+        function logout() {
+            currentUser = null;
+            currentTab = 'dashboard';
+            renderLoginView();
+        }
 
-    function renderCalendar() {
-      const grid = document.getElementById('cal-grid');
-      while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+        function renderTabContent() {
+            const panel = document.getElementById('content-panel');
+            if (currentTab === 'dashboard') {
+                panel.innerHTML = `
+                    <div class="p-6 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">ダッシュボード</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">今日の活動サマリーを確認できます</p>
+                            </div>
+                            <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full font-medium">ログインID: ${currentUser.id}</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                                <div class="flex items-center justify-between text-slate-500 mb-2">
+                                    <span class="text-xs font-semibold uppercase">本日の勉強時間</span>
+                                    <i class="fa-solid fa-clock text-indigo-600"></i>
+                                </div>
+                                <div class="text-2xl font-bold text-slate-800">
+                                    ${focusRecords.filter(r => r.user === currentUser.name).reduce((acc, cur) => acc + cur.time, 0)} <span class="text-sm font-normal text-slate-500">分</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                                <div class="flex items-center justify-between text-slate-500 mb-2">
+                                    <span class="text-xs font-semibold uppercase">掲示板投稿数</span>
+                                    <i class="fa-solid fa-comments text-emerald-600"></i>
+                                </div>
+                                <div class="text-2xl font-bold text-slate-800">
+                                    ${boardPosts.filter(p => p.user === currentUser.name).length} <span class="text-sm font-normal text-slate-500">件</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                                <div class="flex items-center justify-between text-slate-500 mb-2">
+                                    <span class="text-xs font-semibold uppercase">家族メンバー</span>
+                                    <i class="fa-solid fa-users text-amber-600"></i>
+                                </div>
+                                <div class="text-2xl font-bold text-slate-800">
+                                    ${users.length} <span class="text-sm font-normal text-slate-500">名</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'calendar') {
+                panel.innerHTML = `
+                    <div class="p-6 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">カレンダー</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">家族のスケジュール管理</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-slate-500 font-medium">タグ:</span>
+                                <div class="flex flex-wrap gap-1">
+                                    ${customTags.calendar.map(tag => `<span class="px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded text-xs">${tag}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center py-16">
+                            <i class="fa-solid fa-calendar-days text-4xl text-slate-300 mb-3"></i>
+                            <p class="text-slate-600 font-medium">カレンダービュー（2026年6月）</p>
+                            <p class="text-xs text-slate-400 mt-1">マイページ設定からカレンダーのタグ編集が可能です。</p>
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'focus') {
+                panel.innerHTML = `
+                    <div class="p-6 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">FOCUS (勉強記録)</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">日々の学習時間を記録・管理</p>
+                            </div>
+                            <button onclick="openFocusModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium shadow transition">
+                                <i class="fa-solid fa-plus mr-1.5"></i>記録を追加
+                            </button>
+                        </div>
 
-      const year = currentCalDate.getFullYear();
-      const month = currentCalDate.getMonth();
+                        <!-- Focus Records Table with Delete Function -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider">
+                                        <th class="p-4 font-semibold">日付</th>
+                                        <th class="p-4 font-semibold">ユーザー</th>
+                                        <th class="p-4 font-semibold">教科</th>
+                                        <th class="p-4 font-semibold">時間</th>
+                                        <th class="p-4 font-semibold text-right">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${focusRecords.length === 0 ? `<tr><td colspan="5" class="p-6 text-center text-slate-400">記録はありません</td></tr>` : 
+                                      focusRecords.map(r => `
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="p-4 text-slate-600">${r.date}</td>
+                                            <td class="p-4 font-medium text-slate-800">${r.user}</td>
+                                            <td class="p-4"><span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold">${r.subject}</span></td>
+                                            <td class="p-4 text-slate-800 font-semibold">${r.time} 分</td>
+                                            <td class="p-4 text-right">
+                                                <button onclick="deleteFocusRecord(${r.id})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition" title="記録を削除">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                      `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-      const firstDayIndex = new Date(year, month, 1).getDay();
-      const lastDay = new Date(year, month + 1, 0).getDate();
+                    <!-- Add Focus Modal -->
+                    <div id="focus-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">勉強記録の追加</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">教科</label>
+                                    <select id="focus-subject" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                                        ${customTags.focus.map(t => `<option value="${t}">${t}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">勉強時間 (分)</label>
+                                    <input type="number" id="focus-time" value="30" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-2 mt-6">
+                                <button onclick="closeFocusModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium rounded-xl transition">キャンセル</button>
+                                <button onclick="addFocusRecord()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition">追加</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'board') {
+                panel.innerHTML = `
+                    <div class="p-6 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">家族掲示板</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">家族みんなで情報を共有</p>
+                            </div>
+                        </div>
 
-      for (let i = 0; i < firstDayIndex; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'cal-cell';
-        cell.style.background = '#faf9f6';
-        grid.appendChild(cell);
-      }
+                        <!-- Board Input Form -->
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                            <div class="flex space-x-3">
+                                <select id="board-tag" class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700">
+                                    ${customTags.board.map(t => `<option value="${t}">${t}</option>`).join('')}
+                                </select>
+                                <input type="text" id="board-text" placeholder="家族へのメッセージを入力..." class="flex-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                                <button onclick="addBoardPost()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow transition">投稿</button>
+                            </div>
+                        </div>
 
-      for (let i = 1; i <= lastDay; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'cal-cell';
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        
-        cell.innerHTML = `<div class="cal-date-num">${i}</div>`;
-        events.filter(ev => ev.date === dateStr).forEach(ev => {
-          const dot = document.createElement('div');
-          dot.className = 'cal-event-dot';
-          dot.innerText = (ev.time ? ev.time + ' ' : '') + ev.title;
-          cell.appendChild(dot);
-        });
+                        <!-- Board Posts List -->
+                        <div class="space-y-3">
+                            ${boardPosts.map(p => `
+                                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-start">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-semibold">${p.tag}</span>
+                                            <span class="text-xs font-bold text-slate-800">${p.user}</span>
+                                            <span class="text-xs text-slate-400">${p.time}</span>
+                                        </div>
+                                        <p class="text-sm text-slate-700 mt-2">${p.text}</p>
+                                    </div>
+                                    ${p.user === currentUser.name ? `<button onclick="deleteBoardPost(${p.id})" class="text-slate-400 hover:text-rose-500 p-1 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'chat') {
+                const otherUsers = users.filter(u => u.name !== currentUser.name);
+                panel.innerHTML = `
+                    <div class="flex h-full">
+                        <!-- Chat Contacts Sidebar -->
+                        <div class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0">
+                            <div class="p-4 border-b border-slate-200">
+                                <h3 class="font-bold text-slate-800 text-sm">チャット相手を選択</h3>
+                            </div>
+                            <div class="flex-1 overflow-y-auto divide-y divide-slate-100">
+                                ${otherUsers.map(u => `
+                                    <div onclick="selectChatUser('${u.name}')" class="p-4 flex items-center space-x-3 cursor-pointer hover:bg-slate-50 transition ${activeChatUser === u.name ? 'bg-indigo-50/50 border-l-4 border-indigo-600' : ''}">
+                                        <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">
+                                            ${u.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-slate-800">${u.name}</h4>
+                                            <span class="text-xs text-slate-400">${u.role}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
 
-        cell.onclick = () => {
-          document.getElementById('selected-date-title').innerText = `${dateStr} の予定`;
-          const matched = events.filter(ev => ev.date === dateStr);
-          document.getElementById('selected-date-events').innerHTML = matched.length === 0 ? '予定はありません' : matched.map(e => `
-            <div style="margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color);">
-              <div style="font-weight:600;">${e.time ? '[' + e.time + ']' : '[終日]'} ${e.title} <span class="tag-badge"># ${e.tag}</span></div>
-              ${e.memo ? '<div style="color:var(--text-muted); font-size:12px; margin-top:2px;">' + e.memo + '</div>' : ''}
-            </div>
-          `).join('');
+                        <!-- Chat Area -->
+                        <div class="flex-1 flex flex-col bg-slate-50">
+                            ${!activeChatUser ? `
+                                <div class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                                    <i class="fa-solid fa-comments text-4xl text-slate-300 mb-3"></i>
+                                    <h3 class="text-base font-bold text-slate-700">特定のチャット相手が選択されていません</h3>
+                                    <p class="text-xs text-slate-400 mt-1">左側のリストからチャット相手を選択してください。</p>
+                                </div>
+                            ` : `
+                                <div class="p-4 bg-white border-b border-slate-200 flex items-center justify-between shadow-sm">
+                                    <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-circle text-emerald-500 text-xs mr-2"></i>${activeChatUser} とのチャット</h3>
+                                </div>
+                                <div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3">
+                                    ${(chatMessages[activeChatUser] || []).map(m => `
+                                        <div class="flex flex-col ${m.sender === currentUser.name ? 'items-end' : 'items-start'}">
+                                            <div class="max-w-xs md:max-w-md p-3 rounded-2xl text-sm shadow-sm ${m.sender === currentUser.name ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-slate-800 rounded-bl-none border border-slate-200'}">
+                                                <p>${m.text}</p>
+                                            </div>
+                                            <span class="text-[10px] text-slate-400 mt-1 px-1">${m.time}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                <!-- Typing Indicator -->
+                                <div id="typing-indicator" class="px-4 py-1 text-xs text-slate-400 italic hidden">
+                                    入力中...
+                                </div>
+
+                                <!-- Chat Input & Stamp Bar -->
+                                <div class="p-4 bg-white border-t border-slate-200 space-y-2">
+                                    <div class="flex space-x-2 overflow-x-auto pb-1">
+                                        <button onclick="sendStamp('👍 おつかれ！')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs text-slate-700 shrink-0 transition">👍 おつかれ！</button>
+                                        <button onclick="sendStamp('👏 すごい！')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs text-slate-700 shrink-0 transition">👏 すごい！</button>
+                                        <button onclick="sendStamp('🔥 がんばろう！')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs text-slate-700 shrink-0 transition">🔥 がんばろう！</button>
+                                        <button onclick="sendStamp('☕ 休憩しよう')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs text-slate-700 shrink-0 transition">☕ 休憩しよう</button>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <input type="text" id="chat-input" oninput="handleChatInputTyping()" placeholder="メッセージを入力..." class="flex-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                                        <button onclick="sendChatMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow transition">送信</button>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            } else if (currentTab === 'mypage') {
+                panel.innerHTML = `
+                    <div class="p-6 space-y-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">マイページ設定</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">タグ編集およびアカウント設定</p>
+                        </div>
+
+                        <!-- Tag Management Sections -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                                <h3 class="font-bold text-slate-800 text-sm">カレンダータグ編集</h3>
+                                <div id="calendar-tags-list" class="flex flex-wrap gap-1.5">
+                                    ${customTags.calendar.map((t, idx) => `
+                                        <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">
+                                            ${t}
+                                            <button onclick="removeTag('calendar', ${idx})" class="ml-1.5 text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button>
+                                        </span>
+                                    `).join('')}
+                                </div>
+                                <div class="flex space-x-2 pt-2">
+                                    <input type="text" id="new-calendar-tag" placeholder="新しいタグ" class="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                                    <button onclick="addTag('calendar')" class="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold">追加</button>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                                <h3 class="font-bold text-slate-800 text-sm">FOCUS教科タグ編集</h3>
+                                <div id="focus-tags-list" class="flex flex-wrap gap-1.5">
+                                    ${customTags.focus.map((t, idx) => `
+                                        <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">
+                                            ${t}
+                                            <button onclick="removeTag('focus', ${idx})" class="ml-1.5 text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button>
+                                        </span>
+                                    `).join('')}
+                                </div>
+                                <div class="flex space-x-2 pt-2">
+                                    <input type="text" id="new-focus-tag" placeholder="新しい教科" class="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                                    <button onclick="addTag('focus')" class="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold">追加</button>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                                <h3 class="font-bold text-slate-800 text-sm">掲示板タグ編集</h3>
+                                <div id="board-tags-list" class="flex flex-wrap gap-1.5">
+                                    ${customTags.board.map((t, idx) => `
+                                        <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">
+                                            ${t}
+                                            <button onclick="removeTag('board', ${idx})" class="ml-1.5 text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark"></i></button>
+                                        </span>
+                                    `).join('')}
+                                </div>
+                                <div class="flex space-x-2 pt-2">
+                                    <input type="text" id="new-board-tag" placeholder="新しいタグ" class="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                                    <button onclick="addTag('board')" class="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold">追加</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function openFocusModal() { document.getElementById('focus-modal').classList.remove('hidden'); }
+        function closeFocusModal() { document.getElementById('focus-modal').classList.add('hidden'); }
+
+        function addFocusRecord() {
+            const subject = document.getElementById('focus-subject').value;
+            const time = parseInt(document.getElementById('focus-time').value) || 0;
+            const today = new Date().toISOString().split('T')[0];
+
+            focusRecords.push({ id: Date.now(), user: currentUser.name, subject, time, date: today });
+            saveData();
+            closeFocusModal();
+            renderTabContent();
+        }
+
+        function deleteFocusRecord(id) {
+            focusRecords = focusRecords.filter(r => r.id !== id);
+            saveData();
+            renderTabContent();
+        }
+
+        function addBoardPost() {
+            const tag = document.getElementById('board-tag').value;
+            const text = document.getElementById('board-text').value.trim();
+            if (!text) return;
+
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            boardPosts.unshift({ id: Date.now(), user: currentUser.name, tag, text, time: timeStr });
+            saveData();
+            renderTabContent();
+        }
+
+        function deleteBoardPost(id) {
+            boardPosts = boardPosts.filter(p => p.id !== id);
+            saveData();
+            renderTabContent();
+        }
+
+        function selectChatUser(name) {
+            activeChatUser = name;
+            renderTabContent();
+            const container = document.getElementById('chat-messages-container');
+            if (container) container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !activeChatUser) return;
+
+            if (!chatMessages[activeChatUser]) chatMessages[activeChatUser] = [];
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            chatMessages[activeChatUser].push({ sender: currentUser.name, text, time: timeStr, type: 'text' });
+            saveData();
+            input.value = '';
+            renderTabContent();
+            selectChatUser(activeChatUser);
+        }
+
+        function sendStamp(stampText) {
+            if (!activeChatUser) return;
+            if (!chatMessages[activeChatUser]) chatMessages[activeChatUser] = [];
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            chatMessages[activeChatUser].push({ sender: currentUser.name, text: stampText, time: timeStr, type: 'stamp' });
+            saveData();
+            renderTabContent();
+            selectChatUser(activeChatUser);
+        }
+
+        function handleChatInputTyping() {
+            const indicator = document.getElementById('typing-indicator');
+            if (!indicator) return;
+            indicator.classList.remove('hidden');
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                indicator.classList.add('hidden');
+            }, 1000);
+        }
+
+        function addTag(category) {
+            const input = document.getElementById(`new-${category}-tag`);
+            const val = input.value.trim();
+            if (!val) return;
+            customTags[category].push(val);
+            saveData();
+            renderTabContent();
+        }
+
+        function removeTag(category, index) {
+            customTags[category].splice(index, 1);
+            saveData();
+            renderTabContent();
+        }
+
+        // Initial Load Check
+        window.onload = function() {
+            renderLoginView();
         };
-        grid.appendChild(cell);
-      }
-    }
-
-    function openEventModal() {
-      const year = currentCalDate.getFullYear();
-      const month = String(currentCalDate.getMonth() + 1).padStart(2, '0');
-      const defaultDateStr = `${year}-${month}-15`;
-      
-      document.getElementById('event-date-input').value = defaultDateStr;
-      document.getElementById('event-allday-check').checked = true;
-      toggleEventTimeInputs();
-      document.getElementById('event-time-input').value = '09:00';
-      document.getElementById('event-title-input').value = '';
-      document.getElementById('event-memo-input').value = '';
-
-      const select = document.getElementById('event-tag-select');
-      select.innerHTML = '';
-      focusTags.forEach(tag => {
-        const opt = document.createElement('option');
-        opt.value = tag;
-        opt.innerText = tag;
-        select.appendChild(opt);
-      });
-
-      document.getElementById('event-modal').style.display = 'flex';
-    }
-
-    function closeEventModal() {
-      document.getElementById('event-modal').style.display = 'none';
-    }
-
-    function toggleEventTimeInputs() {
-      const isAllDay = document.getElementById('event-allday-check').checked;
-      document.getElementById('event-time-area').style.display = isAllDay ? 'none' : 'flex';
-    }
-
-    function saveEventModal() {
-      const date = document.getElementById('event-date-input').value;
-      const isAllDay = document.getElementById('event-allday-check').checked;
-      const time = isAllDay ? '' : document.getElementById('event-time-input').value;
-      const title = document.getElementById('event-title-input').value.trim();
-      const memo = document.getElementById('event-memo-input').value.trim();
-      const tag = document.getElementById('event-tag-select').value;
-
-      if (!date || !title) {
-        alert('日付とタイトルは必須です');
-        return;
-      }
-
-      events.push({
-        id: Date.now(),
-        date: date,
-        time: time,
-        title: title,
-        memo: memo,
-        tag: tag
-      });
-
-      localStorage.setItem('family_events', JSON.stringify(events));
-      closeEventModal();
-      renderCalendar();
-      alert('予定を追加しました！');
-    }
-
-    /* ---------------- MINI GAME (FORTUNE ONLY) ---------------- */
-    function openGameModal(type) {
-      document.getElementById('game-modal').style.display = 'flex';
-      const title = document.getElementById('game-title');
-      const body = document.getElementById('game-body');
-
-      if (type === 'fortune') {
-        title.innerText = '今日の運勢';
-        body.innerHTML = '<div style="font-size:18px; font-weight:600; margin:10px 0;">大吉 - 心穏やかな一日</div>ラッキーカラー：グレージュ';
-      }
-    }
-
-    function closeGameModal() {
-      document.getElementById('game-modal').style.display = 'none';
-    }
-
-    // 初期描画
-    renderTalkContent();
-  </script>
+    </script>
 </body>
 </html>
