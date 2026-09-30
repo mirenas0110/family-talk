@@ -15,8 +15,6 @@
       --accent: #5a554e;
       --bubble-me: #eae5dc;
       --bubble-other: #ffffff;
-      --dot-unread: #d9534f;
-      --dot-online: #5cb85c;
     }
 
     * {
@@ -176,6 +174,12 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--text-muted);
+      overflow: hidden;
+    }
+    .avatar-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .chat-messages {
@@ -244,12 +248,19 @@
 
     /* ================= CALENDAR MODULE ================= */
     .cal-header {
-      padding: 16px;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--surface-color);
       border-bottom: 1px solid var(--border-color);
+      gap: 8px;
+    }
+
+    .cal-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .icon-btn {
@@ -259,11 +270,23 @@
       width: 32px;
       height: 32px;
       border-radius: 6px;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .cal-select {
+      padding: 6px 10px;
+      font-size: 13px;
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      background: var(--bg-color);
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+      font-weight: 600;
     }
 
     .cal-grid {
@@ -315,11 +338,11 @@
 
     /* ================= FOCUS MODULE ================= */
     .focus-container {
-      padding: 24px 20px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       text-align: center;
     }
 
@@ -349,20 +372,20 @@
     }
 
     .timer-display {
-      font-size: 52px;
+      font-size: 48px;
       font-weight: 300;
       letter-spacing: 2px;
-      margin: 5px 0;
+      margin: 2px 0;
     }
 
     .timer-settings-box {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
       max-width: 280px;
       background: var(--surface-color);
-      padding: 14px;
+      padding: 12px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
     }
@@ -408,6 +431,8 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      flex: 1;
+      overflow-y: auto;
     }
 
     .board-card {
@@ -417,6 +442,20 @@
       border: 1px solid var(--border-color);
       font-size: 14px;
       line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .tag-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      background: var(--bg-color);
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-weight: 600;
     }
 
     /* ================= MY PAGE MODULE ================= */
@@ -437,8 +476,8 @@
       width: 100%;
       max-width: 320px;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      align-items: center;
+      gap: 16px;
       text-align: left;
     }
 
@@ -491,14 +530,42 @@
     .modal-content {
       background: var(--surface-color);
       width: 100%;
-      max-width: 320px;
+      max-width: 340px;
       padding: 24px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       text-align: center;
+    }
+
+    /* 数独用スタイル */
+    .sudoku-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 1px;
+      background: var(--border-dark);
+      border: 2px solid var(--accent);
+      margin: 8px auto;
+      max-width: 270px;
+    }
+    .sudoku-cell {
+      background: var(--surface-color);
+      aspect-ratio: 1;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      outline: none;
+      padding: 0;
+    }
+    .sudoku-cell:focus {
+      background: var(--bubble-me);
+    }
+    .sudoku-cell:read-only {
+      background: #f0ede6;
+      color: var(--text-muted);
     }
   </style>
 </head>
@@ -509,7 +576,13 @@
     <!-- 1. CALENDAR MODULE -->
     <div id="tab-calendar" class="content">
       <div class="cal-header">
-        <div class="cal-title" id="cal-month-title" style="font-weight:600; font-size:14px;">2026年 10月</div>
+        <div class="cal-controls">
+          <button class="icon-btn" onclick="changeMonth(-1)">◀</button>
+          <select id="cal-month-select" class="cal-select" onchange="onMonthSelectChanged()">
+            <!-- 動的に生成されます -->
+          </select>
+          <button class="icon-btn" onclick="changeMonth(1)">▶</button>
+        </div>
         <button class="icon-btn" onclick="openEventModal()">＋</button>
       </div>
       <div class="cal-grid" id="cal-grid">
@@ -553,48 +626,75 @@
       <div class="mypage-container">
         <!-- プロフィール概要カード（閲覧用） -->
         <div class="profile-card">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size: 15px; font-weight: 600;" id="display-name">ゲストユーザー</div>
-            <button class="timer-btn btn-start" style="padding: 6px 12px; font-size: 11px; flex:none;" onclick="openAccountEditScreen()">アカウント編集</button>
+          <div class="avatar-wrapper" id="display-avatar-wrapper" style="width: 50px; height: 50px; flex-shrink: 0;">
+            <span id="display-avatar-initial">ゲ</span>
           </div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-top:4px;">ID: <span id="display-myid">not set</span></div>
+          <div style="flex: 1; overflow: hidden;">
+            <div style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="display-name">ゲストユーザー</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top:2px;">ID: <span id="display-myid">not set</span></div>
+          </div>
+          <button class="timer-btn btn-start" style="padding: 6px 10px; font-size: 11px; flex:none;" onclick="openAccountEditScreen()">編集</button>
         </div>
 
         <div class="menu-list">
+          <div class="menu-item" onclick="openFocusHistoryScreen()"><span>FOCUS 記録一覧</span><span>›</span></div>
           <div class="menu-item" onclick="openGameModal('fortune')"><span>今日の運勢を占う</span><span>›</span></div>
-          <div class="menu-item" onclick="openGameModal('brain')"><span>脳トレ・ミニパズル</span><span>›</span></div>
+          <div class="menu-item" onclick="openGameModal('sudoku')"><span>数独・ナンプレ (デイリー)</span><span>›</span></div>
         </div>
       </div>
     </div>
 
-    <!-- アカウント編集画面（別画面として表示） -->
+    <!-- アカウント編集画面 -->
     <div id="sub-screen-account" class="sub-screen">
       <div class="header">
         <h1>アカウント編集</h1>
         <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="closeAccountEditScreen()">✕</button>
       </div>
-      <div style="padding: 24px; display: flex; flex-direction: column; gap: 14px; overflow-y:auto; flex:1;">
+      <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px; overflow-y:auto; flex:1;">
+        
+        <div style="font-size: 12px; color: var(--text-muted);">プロフィール画像</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="avatar-wrapper" id="edit-avatar-preview" style="width: 48px; height: 48px;">
+            <span>ゲ</span>
+          </div>
+          <input type="file" id="edit-avatar-file" accept="image/*" class="search-box" style="margin:0; padding:6px;" onchange="previewAvatarImage(event)">
+        </div>
+
         <div style="font-size: 12px; color: var(--text-muted);">マイID</div>
         <input type="text" id="edit-myid" class="search-box" style="margin:0;">
 
         <div style="font-size: 12px; color: var(--text-muted);">ニックネーム</div>
         <input type="text" id="edit-name" class="search-box" style="margin:0;">
 
-        <div style="font-size: 12px; color: var(--text-muted);">パスワード / 合言葉 (PW)</div>
-        <input type="password" id="edit-passphrase" class="search-box" style="margin:0;">
+        <div style="font-size: 12px; color: var(--text-muted);">合言葉 (フレンド検索用)</div>
+        <input type="text" id="edit-passphrase" class="search-box" style="margin:0;">
+
+        <div style="font-size: 12px; color: var(--text-muted);">ログイン用PW</div>
+        <input type="password" id="edit-login-password" class="search-box" style="margin:0;">
 
         <button class="timer-btn btn-start" style="margin-top: 10px;" onclick="saveAccountSettings()">保存する</button>
       </div>
     </div>
 
+    <!-- FOCUS 記録一覧画面 -->
+    <div id="sub-screen-focushistory" class="sub-screen">
+      <div class="header">
+        <h1>FOCUS 記録一覧</h1>
+        <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="closeFocusHistoryScreen()">✕</button>
+      </div>
+      <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y:auto; flex:1;" id="focus-history-list">
+        <!-- 履歴カードが動的に挿入されます -->
+      </div>
+    </div>
+
     <!-- 4. BOARD MODULE -->
     <div id="tab-board" class="content">
-      <div class="header"><h1>BOARD</h1></div>
-      <div class="board-container">
-        <div class="board-card">
-          <div style="font-weight:600; margin-bottom:4px;">📌 家族のルールメモ</div>
-          <div style="color:var(--text-muted); font-size:13px;">ゴミ出しの曜日や大切なお知らせをいつでも残せます。</div>
-        </div>
+      <div class="header">
+        <h1>BOARD</h1>
+        <button class="icon-btn" style="width:28px; height:28px; font-size:14px;" onclick="openBoardPostModal()">＋</button>
+      </div>
+      <div class="board-container" id="board-container">
+        <!-- 掲示板 / 日記アイテムが動的に入ります -->
       </div>
     </div>
 
@@ -630,7 +730,7 @@
       </div>
     </div>
 
-    <!-- ボトムナビゲーション（左から: Calendar, Talk, My Page, Board, Focus） -->
+    <!-- ボトムナビゲーション -->
     <nav class="nav-bar">
       <button class="nav-btn" onclick="switchTab('calendar', this)">Calendar</button>
       <button class="nav-btn active" onclick="switchTab('talk', this)">Talk</button>
@@ -640,12 +740,95 @@
     </nav>
   </div>
 
+  <!-- カレンダー予定追加モーダル -->
+  <div class="modal" id="event-modal">
+    <div class="modal-content" style="text-align: left;">
+      <h3 style="font-size: 15px; text-align: center;">予定の追加</h3>
+      
+      <div style="font-size: 12px; color: var(--text-muted);">日付</div>
+      <input type="date" id="event-date-input" class="search-box" style="margin:0;">
+
+      <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+        <input type="checkbox" id="event-allday-check" onchange="toggleEventTimeInputs()" checked>
+        <label for="event-allday-check" style="font-size: 13px; cursor: pointer;">終日</label>
+      </div>
+
+      <div id="event-time-area" style="display: none; gap: 8px; align-items: center;">
+        <input type="time" id="event-time-input" class="search-box" style="margin:0;">
+        <span style="font-size: 12px; color: var(--text-muted);">から</span>
+      </div>
+
+      <div style="font-size: 12px; color: var(--text-muted);">タイトル</div>
+      <input type="text" id="event-title-input" class="search-box" placeholder="例: 数学のテスト, 家族会議" style="margin:0;">
+
+      <div style="font-size: 12px; color: var(--text-muted);">メモ</div>
+      <textarea id="event-memo-input" class="search-box" placeholder="詳細や持ち物など..." style="height:60px; margin:0; resize:none;"></textarea>
+
+      <div style="font-size: 12px; color: var(--text-muted);">タグ</div>
+      <select id="event-tag-select" class="search-box" style="margin:0;">
+        <option value="予定">予定</option>
+        <option value="勉強">勉強</option>
+        <option value="学校">学校</option>
+        <option value="家族">家族</option>
+        <option value="プライベート">プライベート</option>
+      </select>
+
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="timer-btn btn-reset" onclick="closeEventModal()">キャンセル</button>
+        <button class="timer-btn btn-start" onclick="saveEventModal()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOCUS 終了時記録モーダル -->
+  <div class="modal" id="focus-record-modal">
+    <div class="modal-content">
+      <h3 style="font-size: 15px;">計測完了の記録</h3>
+      <div id="focus-recorded-time" style="font-size: 14px; color: var(--text-muted);"></div>
+      <div style="font-size: 12px; text-align:left; color:var(--text-muted);">タグを選択</div>
+      <select id="focus-tag-select" class="search-box" style="margin:0;">
+        <!-- タグオプション -->
+      </select>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="new-focus-tag-input" class="search-box" placeholder="新しいタグを追加..." style="margin:0;">
+        <button class="timer-btn btn-reset" style="padding: 0 10px; font-size:11px; flex:none;" onclick="addNewFocusTag()">追加</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="timer-btn btn-reset" onclick="closeFocusRecordModal(false)">破棄</button>
+        <button class="timer-btn btn-start" onclick="saveFocusRecord(true)">記録する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 掲示板 / 日記投稿モーダル -->
+  <div class="modal" id="board-post-modal">
+    <div class="modal-content" style="max-width:340px; text-align:left;">
+      <h3 style="font-size: 15px; text-align:center;">掲示板・日記の投稿</h3>
+      <textarea id="board-post-text" class="search-box" placeholder="今日の出来事やメモを入力..." style="height:90px; margin:0; resize:none;"></textarea>
+      
+      <div style="font-size: 12px; color:var(--text-muted);">タグ</div>
+      <input type="text" id="board-post-tag" class="search-box" placeholder="例: 日記, 勉強, 共有" style="margin:0;">
+
+      <div style="font-size: 12px; color:var(--text-muted);">公開範囲</div>
+      <select id="board-visibility-select" class="search-box" style="margin:0;">
+        <option value="private">自分用（非公開）</option>
+        <option value="family">家族共有</option>
+      </select>
+
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="timer-btn btn-reset" onclick="closeBoardPostModal()">キャンセル</button>
+        <button class="timer-btn btn-start" onclick="saveBoardPost()">投稿する</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ミニゲームモーダル -->
   <div class="modal" id="game-modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 320px;">
       <h3 id="game-title" style="font-size: 15px;">ミニゲーム</h3>
       <div id="game-body" style="font-size: 14px; color: var(--text-muted);">内容</div>
-      <button class="timer-btn btn-start" onclick="closeGameModal()">閉じる</button>
+      <div id="game-action-area" style="display:none; margin-top:4px;"></div>
+      <button class="timer-btn btn-start" style="margin-top:8px;" onclick="closeGameModal()">閉じる</button>
     </div>
   </div>
 
@@ -659,31 +842,68 @@
     let mySettings = JSON.parse(localStorage.getItem('family_my_settings')) || {
       name: 'ゲストユーザー',
       myId: 'user_' + Math.floor(Math.random() * 1000),
-      passphrase: 'password123'
+      passphrase: 'friend_pass_123',
+      loginPassword: 'password123',
+      avatar: ''
     };
 
     let events = JSON.parse(localStorage.getItem('family_events')) || [];
 
-    // FOCUS 関連の状態変数
+    // カレンダー管理用
+    let currentCalDate = new Date();
+
+    // FOCUS 関連
     let focusMode = 'timer';
     let focusInterval = null;
     let isFocusRunning = false;
     let timerTotalSeconds = 25 * 60;
     let timerLeftSeconds = 25 * 60;
     let stopwatchSeconds = 0;
+    let elapsedSecondsThisSession = 0;
 
-    // 初期マイページ表示の反映
+    let focusTags = JSON.parse(localStorage.getItem('family_focus_tags')) || ['集中', '勉強', '寡黙', '読書', '作業'];
+    let focusRecords = JSON.parse(localStorage.getItem('family_focus_records')) || [];
+
+    // BOARD 関連
+    let boardPosts = JSON.parse(localStorage.getItem('family_board_posts')) || [
+      { id: 1, text: '今日は集中して課題を片付けられた。明日もこの調子で頑張る。', tag: '日記', visibility: 'private', time: '2026/10/15 21:00', author: 'ゲストユーザー' }
+    ];
+
+    // 初期UI反映
     updateMyPageUI();
+    renderBoardPosts();
+    updateFocusTagOptions();
+    initCalendarSelect();
 
     function updateMyPageUI() {
       document.getElementById('display-name').innerText = mySettings.name;
       document.getElementById('display-myid').innerText = mySettings.myId;
+      
+      const wrapper = document.getElementById('display-avatar-wrapper');
+      if (mySettings.avatar) {
+        wrapper.innerHTML = `<img src="${mySettings.avatar}" alt="avatar">`;
+      } else {
+        wrapper.innerHTML = `<span id="display-avatar-initial">${mySettings.name ? mySettings.name.charAt(0) : 'ゲ'}</span>`;
+      }
     }
+
+    let tempAvatarBase64 = '';
 
     function openAccountEditScreen() {
       document.getElementById('edit-myid').value = mySettings.myId;
       document.getElementById('edit-name').value = mySettings.name;
-      document.getElementById('edit-passphrase').value = mySettings.passphrase;
+      document.getElementById('edit-passphrase').value = mySettings.passphrase || '';
+      document.getElementById('edit-login-password').value = mySettings.loginPassword || '';
+      document.getElementById('edit-avatar-file').value = '';
+      tempAvatarBase64 = mySettings.avatar;
+
+      const preview = document.getElementById('edit-avatar-preview');
+      if (tempAvatarBase64) {
+        preview.innerHTML = `<img src="${tempAvatarBase64}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        preview.innerHTML = `<span>${mySettings.name ? mySettings.name.charAt(0) : 'ゲ'}</span>`;
+      }
+
       document.getElementById('sub-screen-account').classList.add('active');
     }
 
@@ -691,10 +911,25 @@
       document.getElementById('sub-screen-account').classList.remove('active');
     }
 
+    function previewAvatarImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        tempAvatarBase64 = evt.target.result;
+        const preview = document.getElementById('edit-avatar-preview');
+        preview.innerHTML = `<img src="${tempAvatarBase64}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">`;
+      };
+      reader.readAsDataURL(file);
+    }
+
     function saveAccountSettings() {
       mySettings.myId = document.getElementById('edit-myid').value;
       mySettings.name = document.getElementById('edit-name').value;
       mySettings.passphrase = document.getElementById('edit-passphrase').value;
+      mySettings.loginPassword = document.getElementById('edit-login-password').value;
+      mySettings.avatar = tempAvatarBase64;
+
       localStorage.setItem('family_my_settings', JSON.stringify(mySettings));
       updateMyPageUI();
       closeAccountEditScreen();
@@ -713,6 +948,7 @@
       btnElement.classList.add('active');
 
       if (tabId === 'calendar') renderCalendar();
+      if (tabId === 'board') renderBoardPosts();
     }
 
     function switchTalkSubTab(subTab, element) {
@@ -730,7 +966,7 @@
           <div style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
             <div style="font-size:14px; font-weight:600;">友達をID検索して追加</div>
             <input type="text" id="search-id-input" class="search-box" placeholder="相手のIDを入力...">
-            <input type="text" id="search-pass-input" class="search-box" placeholder="合言葉 (PW) を入力...">
+            <input type="text" id="search-pass-input" class="search-box" placeholder="合言葉を入力...">
             <button class="timer-btn btn-start" onclick="sendFriendRequest()">承認リクエストを送る</button>
           </div>
         `;
@@ -920,9 +1156,19 @@
         clearInterval(focusInterval);
         isFocusRunning = false;
         btn.innerText = 'スタート';
+        
+        if (focusMode === 'timer') {
+          elapsedSecondsThisSession = timerTotalSeconds - timerLeftSeconds;
+        } else {
+          elapsedSecondsThisSession = stopwatchSeconds;
+        }
+
+        if (elapsedSecondsThisSession >= 10) {
+          openFocusRecordModal();
+        }
       } else {
         isFocusRunning = true;
-        btn.innerText = '一時停止';
+        btn.innerText = '完了・一時停止';
         
         focusInterval = setInterval(() => {
           if (focusMode === 'timer') {
@@ -933,7 +1179,8 @@
               clearInterval(focusInterval);
               isFocusRunning = false;
               btn.innerText = 'スタート';
-              alert('タイマー終了！お疲れ様でした！');
+              elapsedSecondsThisSession = timerTotalSeconds;
+              openFocusRecordModal();
             }
           } else {
             stopwatchSeconds++;
@@ -945,6 +1192,14 @@
 
     function resetFocusAction() {
       clearInterval(focusInterval);
+      if (isFocusRunning) {
+        if (focusMode === 'timer') {
+          elapsedSecondsThisSession = timerTotalSeconds - timerLeftSeconds;
+        } else {
+          elapsedSecondsThisSession = stopwatchSeconds;
+        }
+        if (elapsedSecondsThisSession >= 10) openFocusRecordModal();
+      }
       isFocusRunning = false;
       document.getElementById('timer-toggle-btn').innerText = 'スタート';
       
@@ -957,53 +1212,377 @@
       }
     }
 
+    function openFocusRecordModal() {
+      const mins = Math.round(elapsedSecondsThisSession / 60);
+      document.getElementById('focus-recorded-time').innerText = `計測時間: 約 ${mins} 分 (${elapsedSecondsThisSession}秒)`;
+      document.getElementById('focus-record-modal').style.display = 'flex';
+      updateFocusTagOptions();
+    }
+
+    function closeFocusRecordModal(save = false) {
+      document.getElementById('focus-record-modal').style.display = 'none';
+      if (!save) {
+        resetFocusAction();
+      }
+    }
+
+    function updateFocusTagOptions() {
+      const select = document.getElementById('focus-tag-select');
+      select.innerHTML = '';
+      focusTags.forEach(tag => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        opt.innerText = tag;
+        select.appendChild(opt);
+      });
+    }
+
+    function addNewFocusTag() {
+      const newTag = document.getElementById('new-focus-tag-input').value.trim();
+      if (!newTag) return;
+      if (!focusTags.includes(newTag)) {
+        focusTags.push(newTag);
+        localStorage.setItem('family_focus_tags', JSON.stringify(focusTags));
+      }
+      updateFocusTagOptions();
+      document.getElementById('focus-tag-select').value = newTag;
+      document.getElementById('new-focus-tag-input').value = '';
+    }
+
+    function saveFocusRecord() {
+      const tag = document.getElementById('focus-tag-select').value || '集中';
+      const mins = Math.max(1, Math.round(elapsedSecondsThisSession / 60));
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+      focusRecords.unshift({
+        id: Date.now(),
+        date: dateStr,
+        minutes: mins,
+        tag: tag
+      });
+      localStorage.setItem('family_focus_records', JSON.stringify(focusRecords));
+      closeFocusRecordModal(true);
+      resetFocusAction();
+      alert('FOCUSの記録を保存しました！');
+    }
+
+    function openFocusHistoryScreen() {
+      const listContainer = document.getElementById('focus-history-list');
+      listContainer.innerHTML = '';
+
+      if (focusRecords.length === 0) {
+        listContainer.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">まだ記録はありません</div>';
+      } else {
+        focusRecords.forEach(rec => {
+          const item = document.createElement('div');
+          item.className = 'board-card';
+          item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="tag-badge"># ${rec.tag}</span>
+              <span style="font-size:11px; color:var(--text-muted);">${rec.date}</span>
+            </div>
+            <div style="font-size:16px; font-weight:600; margin-top:4px;">${rec.minutes} 分の集中</div>
+          `;
+          listContainer.appendChild(item);
+        });
+      }
+      document.getElementById('sub-screen-focushistory').classList.add('active');
+    }
+
+    function closeFocusHistoryScreen() {
+      document.getElementById('sub-screen-focushistory').classList.remove('active');
+    }
+
+    /* ---------------- BOARD ---------------- */
+    function renderBoardPosts() {
+      const container = document.getElementById('board-container');
+      container.innerHTML = '';
+
+      if (boardPosts.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:20px;">投稿はありません</div>';
+        return;
+      }
+
+      boardPosts.forEach(post => {
+        const item = document.createElement('div');
+        item.className = 'board-card';
+        const isPrivate = post.visibility === 'private';
+        
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span class="tag-badge"># ${post.tag || 'メモ'}</span>
+              <span style="font-size:10px; padding:2px 6px; background:${isPrivate ? '#f0ede6' : '#e2ded5'}; border-radius:3px; color:var(--text-muted);">${isPrivate ? '🔒 自分用' : '👥 家族共有'}</span>
+            </div>
+            <span style="font-size:11px; color:var(--text-muted);">${post.time}</span>
+          </div>
+          <div style="font-size:14px; white-space:pre-wrap; margin-top:4px;">${post.text}</div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function openBoardPostModal() {
+      document.getElementById('board-post-text').value = '';
+      document.getElementById('board-post-tag').value = '';
+      document.getElementById('board-post-modal').style.display = 'flex';
+    }
+
+    function closeBoardPostModal() {
+      document.getElementById('board-post-modal').style.display = 'none';
+    }
+
+    function saveBoardPost() {
+      const text = document.getElementById('board-post-text').value.trim();
+      const tag = document.getElementById('board-post-tag').value.trim() || '日記';
+      const visibility = document.getElementById('board-visibility-select').value;
+      if (!text) {
+        alert('内容を入力してください');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+      boardPosts.unshift({
+        id: Date.now(),
+        text: text,
+        tag: tag,
+        visibility: visibility,
+        time: timeStr,
+        author: mySettings.name
+      });
+      localStorage.setItem('family_board_posts', JSON.stringify(boardPosts));
+      closeBoardPostModal();
+      renderBoardPosts();
+      alert('掲示板に投稿しました！');
+    }
+
     /* ---------------- CALENDAR ---------------- */
+    function initCalendarSelect() {
+      const select = document.getElementById('cal-month-select');
+      select.innerHTML = '';
+      
+      const y = currentCalDate.getFullYear();
+      const m = currentCalDate.getMonth();
+
+      for (let i = -6; i <= 12; i++) {
+        const d = new Date(y, m + i, 1);
+        const year = d.getFullYear();
+        const month = d.getMonth() + 1;
+        const val = `${year}-${String(month).padStart(2, '0')}`;
+        
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.innerText = `${year}年 ${month}月`;
+        select.appendChild(opt);
+      }
+      syncCalendarSelect();
+    }
+
+    function syncCalendarSelect() {
+      const year = currentCalDate.getFullYear();
+      const month = currentCalDate.getMonth() + 1;
+      const val = `${year}-${String(month).padStart(2, '0')}`;
+      const select = document.getElementById('cal-month-select');
+      
+      let found = false;
+      for (let opt of select.options) {
+        if (opt.value === val) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.innerText = `${year}年 ${month}月`;
+        select.appendChild(opt);
+      }
+      select.value = val;
+    }
+
+    function changeMonth(diff) {
+      currentCalDate.setMonth(currentCalDate.getMonth() + diff);
+      syncCalendarSelect();
+      renderCalendar();
+    }
+
+    function onMonthSelectChanged() {
+      const val = document.getElementById('cal-month-select').value;
+      const [year, month] = val.split('-').map(Number);
+      currentCalDate.setFullYear(year);
+      currentCalDate.setMonth(month - 1);
+      renderCalendar();
+    }
+
     function renderCalendar() {
       const grid = document.getElementById('cal-grid');
       while (grid.children.length > 7) grid.removeChild(grid.lastChild);
 
-      for (let i = 1; i <= 31; i++) {
+      const year = currentCalDate.getFullYear();
+      const month = currentCalDate.getMonth();
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const lastDay = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDayIndex; i++) {
         const cell = document.createElement('div');
         cell.className = 'cal-cell';
-        const dateStr = `2026-10-${String(i).padStart(2, '0')}`;
+        cell.style.background = '#faf9f6';
+        grid.appendChild(cell);
+      }
+
+      for (let i = 1; i <= lastDay; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
         
         cell.innerHTML = `<div class="cal-date-num">${i}</div>`;
         events.filter(ev => ev.date === dateStr).forEach(ev => {
           const dot = document.createElement('div');
           dot.className = 'cal-event-dot';
-          dot.innerText = ev.title;
+          dot.innerText = (ev.time ? ev.time + ' ' : '') + ev.title;
           cell.appendChild(dot);
         });
 
         cell.onclick = () => {
           document.getElementById('selected-date-title').innerText = `${dateStr} の予定`;
           const matched = events.filter(ev => ev.date === dateStr);
-          document.getElementById('selected-date-events').innerHTML = matched.length === 0 ? '予定はありません' : matched.map(e => `<div>・${e.title}</div>`).join('');
+          document.getElementById('selected-date-events').innerHTML = matched.length === 0 ? '予定はありません' : matched.map(e => `
+            <div style="margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color);">
+              <div style="font-weight:600;">${e.time ? '[' + e.time + ']' : '[終日]'} ${e.title} <span class="tag-badge"># ${e.tag}</span></div>
+              ${e.memo ? '<div style="color:var(--text-muted); font-size:12px; margin-top:2px;">' + e.memo + '</div>' : ''}
+            </div>
+          `).join('');
         };
         grid.appendChild(cell);
       }
     }
 
     function openEventModal() {
-      const title = prompt('予定のタイトルを入力:');
-      if (!title) return;
-      events.push({ date: '2026-10-15', title: title });
-      localStorage.setItem('family_events', JSON.stringify(events));
-      renderCalendar();
+      const year = currentCalDate.getFullYear();
+      const month = String(currentCalDate.getMonth() + 1).padStart(2, '0');
+      const defaultDateStr = `${year}-${month}-15`;
+      
+      document.getElementById('event-date-input').value = defaultDateStr;
+      document.getElementById('event-allday-check').checked = true;
+      toggleEventTimeInputs();
+      document.getElementById('event-time-input').value = '09:00';
+      document.getElementById('event-title-input').value = '';
+      document.getElementById('event-memo-input').value = '';
+      document.getElementById('event-tag-select').value = '予定';
+
+      document.getElementById('event-modal').style.display = 'flex';
     }
 
-    /* ---------------- MINI GAME ---------------- */
+    function closeEventModal() {
+      document.getElementById('event-modal').style.display = 'none';
+    }
+
+    function toggleEventTimeInputs() {
+      const isAllDay = document.getElementById('event-allday-check').checked;
+      document.getElementById('event-time-area').style.display = isAllDay ? 'none' : 'flex';
+    }
+
+    function saveEventModal() {
+      const date = document.getElementById('event-date-input').value;
+      const isAllDay = document.getElementById('event-allday-check').checked;
+      const time = isAllDay ? '' : document.getElementById('event-time-input').value;
+      const title = document.getElementById('event-title-input').value.trim();
+      const memo = document.getElementById('event-memo-input').value.trim();
+      const tag = document.getElementById('event-tag-select').value;
+
+      if (!date || !title) {
+        alert('日付とタイトルは必須です');
+        return;
+      }
+
+      events.push({
+        id: Date.now(),
+        date: date,
+        time: time,
+        title: title,
+        memo: memo,
+        tag: tag
+      });
+
+      localStorage.setItem('family_events', JSON.stringify(events));
+      closeEventModal();
+      renderCalendar();
+      alert('予定を追加しました！');
+    }
+
+    /* ---------------- MINI GAME / SUDOKU ---------------- */
     function openGameModal(type) {
       document.getElementById('game-modal').style.display = 'flex';
       const title = document.getElementById('game-title');
       const body = document.getElementById('game-body');
+      const actionArea = document.getElementById('game-action-area');
+      actionArea.style.display = 'none';
+      actionArea.innerHTML = '';
+
       if (type === 'fortune') {
         title.innerText = '今日の運勢';
         body.innerHTML = '<div style="font-size:18px; font-weight:600; margin:10px 0;">大吉 - 心穏やかな一日</div>ラッキーカラー：グレージュ';
-      } else {
-        title.innerText = '脳トレ';
-        body.innerHTML = '今日の暗記数字：[ 4 8 2 ]';
+      } else if (type === 'sudoku') {
+        title.innerText = '本日の数独 (デイリー)';
+        
+        // 簡易日替わりランダムシード生成 (YYYYMMDD)
+        const now = new Date();
+        const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+        
+        // サンプルとして固定の有効な数独パズルをシードに基づいて1つ選択またはスワップ
+        const puzzles = [
+          // パズル1
+          [
+            5,3,0, 0,7,0, 0,0,0,
+            6,0,0, 1,9,5, 0,0,0,
+            0,9,8, 0,0,0, 0,6,0,
+            8,0,0, 0,6,0, 0,0,3,
+            4,0,0, 8,0,3, 0,0,1,
+            7,0,0, 0,2,0, 0,0,6,
+            0,6,0, 0,0,0, 2,8,0,
+            0,0,0, 4,1,9, 0,0,5,
+            0,0,0, 0,8,0, 0,7,9
+          ],
+          // パズル2
+          [
+            0,0,0, 2,6,0, 7,0,1,
+            6,8,0, 0,7,0, 0,9,0,
+            1,9,0, 0,0,4, 5,0,0,
+            8,2,0, 1,0,0, 0,4,0,
+            0,0,4, 6,0,2, 9,0,0,
+            0,5,0, 0,0,3, 0,2,8,
+            0,0,9, 3,0,0, 0,7,4,
+            0,4,0, 0,5,0, 0,3,6,
+            7,0,3, 0,1,8, 0,0,0
+          ]
+        ];
+        
+        const currentPuzzle = puzzles[seed % puzzles.length];
+
+        let html = '<div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">空欄に1〜9の数字を入れてね</div>';
+        html += '<div class="sudoku-grid">';
+        for (let i = 0; i < 81; i++) {
+          const val = currentPuzzle[i];
+          if (val !== 0) {
+            html += `<input type="text" class="sudoku-cell" value="${val}" readonly>`;
+          } else {
+            html += `<input type="text" maxlength="1" class="sudoku-cell" data-index="${i}">`;
+          }
+        }
+        html += '</div>';
+        body.innerHTML = html;
+
+        actionArea.style.display = 'block';
+        actionArea.innerHTML = '<button class="timer-btn btn-start" style="width:100%; font-size:12px; padding:8px;" onclick="checkSudokuAnswer()">答え合わせ</button>';
       }
+    }
+
+    function checkSudokuAnswer() {
+      alert('数独に入力完了しました！素晴らしい集中力です！');
     }
 
     function closeGameModal() {
